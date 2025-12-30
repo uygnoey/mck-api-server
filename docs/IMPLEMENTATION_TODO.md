@@ -2,7 +2,7 @@
 # BMW M Club Korea API 서버 - 구현 TODO 목록
 
 > 모듈별, 기능별 상세 구현 항목
-> Last Updated: 2025-01-01
+> Last Updated: 2025-12-30
 
 ---
 
@@ -33,62 +33,62 @@
 #### 1.1.1 Domain Base Classes
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| BaseEntity 구현 | `shared/domain/BaseEntity.java` | [ ] | P0 |
-| BaseTimeEntity 구현 | `shared/domain/BaseTimeEntity.java` | [ ] | P0 |
-| DomainEvent 인터페이스 | `shared/domain/DomainEvent.java` | [ ] | P0 |
+| BaseEntity 구현 | `shared/domain/BaseEntity.java` | [x] | P0 |
+| BaseTimeEntity 구현 | `shared/domain/BaseTimeEntity.java` | [x] | P0 |
+| DomainEvent 인터페이스 | `shared/domain/DomainEvent.java` | [x] | P0 |
 
 **BaseEntity 상세 항목**:
-- [ ] `id` (Long, @Id, @GeneratedValue)
-- [ ] `createdAt` (LocalDateTime, @CreatedDate)
-- [ ] `updatedAt` (LocalDateTime, @LastModifiedDate)
-- [ ] `createdBy` (Long, @CreatedBy)
-- [ ] `updatedBy` (Long, @LastModifiedBy)
-- [ ] JPA Auditing 설정 (@EnableJpaAuditing)
+- [x] `id` (Long, @Id, @GeneratedValue)
+- [x] `createdAt` (LocalDateTime, @CreatedDate)
+- [x] `updatedAt` (LocalDateTime, @LastModifiedDate)
+- [x] `createdBy` (Long, @CreatedBy)
+- [x] `updatedBy` (Long, @LastModifiedBy)
+- [x] JPA Auditing 설정 (@EnableJpaAuditing)
 
 #### 1.1.2 Exception Handling
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| BusinessException 기본 클래스 | `shared/exception/BusinessException.java` | [ ] | P0 |
-| ErrorCode Enum 정의 | `shared/exception/ErrorCode.java` | [ ] | P0 |
-| GlobalExceptionHandler | `shared/exception/GlobalExceptionHandler.java` | [ ] | P0 |
+| BusinessException 기본 클래스 | `shared/exception/BusinessException.java` | [x] | P0 |
+| ErrorCode Enum 정의 | `shared/exception/ErrorCode.java` | [x] | P0 |
+| GlobalExceptionHandler | `shared/exception/GlobalExceptionHandler.java` | [x] | P0 |
 
 **ErrorCode 상세 항목**:
-- [ ] Common errors (INVALID_INPUT, NOT_FOUND, FORBIDDEN, etc.)
-- [ ] Auth errors (UNAUTHORIZED, TOKEN_EXPIRED, OAUTH_FAILED, etc.)
-- [ ] User errors (USER_NOT_FOUND, DUPLICATE_EMAIL, etc.)
-- [ ] Membership errors (APPLICATION_NOT_FOUND, DOCUMENT_REQUIRED, etc.)
-- [ ] Community errors (BOARD_NOT_FOUND, POST_NOT_FOUND, etc.)
-- [ ] Payment errors (PAYMENT_NOT_FOUND, AMOUNT_MISMATCH, etc.)
+- [x] Common errors (INVALID_INPUT, NOT_FOUND, FORBIDDEN, etc.)
+- [x] Auth errors (UNAUTHORIZED, TOKEN_EXPIRED, OAUTH_FAILED, etc.)
+- [x] User errors (USER_NOT_FOUND, DUPLICATE_EMAIL, etc.)
+- [x] Membership errors (APPLICATION_NOT_FOUND, DOCUMENT_REQUIRED, etc.)
+- [x] Community errors (BOARD_NOT_FOUND, POST_NOT_FOUND, etc.)
+- [x] Payment errors (PAYMENT_NOT_FOUND, AMOUNT_MISMATCH, etc.)
 
 #### 1.1.3 Security Configuration
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| SecurityConfig 메인 설정 | `shared/security/SecurityConfig.java` | [ ] | P0 |
-| JwtTokenProvider 토큰 관리 | `shared/security/JwtTokenProvider.java` | [ ] | P0 |
-| JwtAuthenticationFilter | `shared/security/JwtAuthenticationFilter.java` | [ ] | P0 |
-| CurrentUser 어노테이션 | `shared/security/CurrentUser.java` | [ ] | P1 |
-| CurrentUserArgumentResolver | `shared/security/CurrentUserArgumentResolver.java` | [ ] | P1 |
+| SecurityConfig 메인 설정 | `shared/security/SecurityConfig.java` | [x] | P0 |
+| JwtTokenProvider 토큰 관리 | `shared/security/JwtTokenProvider.java` | [x] | P0 |
+| JwtAuthenticationFilter | `shared/security/JwtAuthenticationFilter.java` | [x] | P0 |
+| CurrentUser 어노테이션 | `shared/security/CurrentUser.java` | [x] | P1 |
+| CurrentUserArgumentResolver | `shared/security/CurrentUserArgumentResolver.java` | [x] | P1 |
 
 **JwtTokenProvider 상세 항목**:
-- [ ] Access Token 생성 (15분 만료)
-- [ ] Refresh Token 생성 (7일 만료)
-- [ ] Token 검증 로직
-- [ ] Token에서 사용자 정보 추출
-- [ ] Token 갱신 로직
+- [x] Access Token 생성 (15분 만료)
+- [x] Refresh Token 생성 (7일 만료)
+- [x] Token 검증 로직
+- [x] Token에서 사용자 정보 추출
+- [x] Token 갱신 로직
 
 **SecurityConfig 상세 항목**:
-- [ ] CORS 설정 (프론트엔드 도메인)
-- [ ] CSRF 비활성화 (REST API)
-- [ ] 세션 STATELESS 설정
-- [ ] 경로별 인증 요구 설정
-- [ ] OAuth2 로그인 설정
-- [ ] JWT 필터 등록
+- [x] CORS 설정 (프론트엔드 도메인)
+- [x] CSRF 비활성화 (REST API)
+- [x] 세션 STATELESS 설정
+- [x] 경로별 인증 요구 설정
+- [x] OAuth2 로그인 설정
+- [x] JWT 필터 등록
 
 #### 1.1.4 Utility Classes
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| ApiResponse 표준 응답 | `shared/util/ApiResponse.java` | [ ] | P0 |
-| PageResponse 페이지네이션 | `shared/util/PageResponse.java` | [ ] | P1 |
+| ApiResponse 표준 응답 | `shared/util/ApiResponse.java` | [x] | P0 |
+| PageResponse 페이지네이션 | `shared/util/PageResponse.java` | [x] | P1 |
 | DateTimeUtils 날짜 유틸 | `shared/util/DateTimeUtils.java` | [ ] | P2 |
 
 ---
@@ -98,126 +98,133 @@
 #### 1.2.1 Domain Entities
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| User 엔티티 | `user/domain/User.java` | [ ] | P0 |
-| UserGrade 엔티티 (DB 테이블) | `user/domain/UserGrade.java` | [ ] | P0 |
-| AssociateStatus Enum | `user/domain/AssociateStatus.java` | [ ] | P0 |
-| ExemptionType Enum | `user/domain/ExemptionType.java` | [ ] | P0 |
-| OAuthProvider Enum | `user/domain/OAuthProvider.java` | [ ] | P0 |
-| OAuthAccount 엔티티 | `user/domain/OAuthAccount.java` | [ ] | P0 |
-| PasskeyCredential 엔티티 | `user/domain/PasskeyCredential.java` | [ ] | P1 |
+| User 엔티티 | `user/domain/User.java` | [x] | P0 |
+| UserGrade 엔티티 (DB 테이블) | `user/domain/UserGrade.java` | [x] | P0 |
+| AssociateStatus Enum | `user/domain/AssociateStatus.java` | [x] | P0 |
+| ExemptionType Enum | `user/domain/ExemptionType.java` | [x] | P0 |
+| OAuthProvider Enum | `user/domain/OAuthProvider.java` | [x] | P0 |
+| OAuthAccount 엔티티 | `user/domain/OAuthAccount.java` | [x] | P0 |
+| PasskeyCredential 엔티티 | `user/domain/PasskeyCredential.java` | [x] | P1 |
+| MemberVehicle 엔티티 | `user/domain/MemberVehicle.java` | [x] | P0 |
+| VehicleOwnershipType Enum | `user/domain/VehicleOwnershipType.java` | [x] | P0 |
+| VehicleStatus Enum | `user/domain/VehicleStatus.java` | [x] | P0 |
 
 **User 엔티티 필드**:
-- [ ] `id` (Long, PK)
-- [ ] `memberNumber` (Integer, UNIQUE, 정회원 번호)
-- [ ] `realName` (String, 실명)
-- [ ] `email` (String, UNIQUE)
-- [ ] `phoneNumber` (String)
-- [ ] `profileImageUrl` (String)
-- [ ] `grade` (UserGrade, @ManyToOne)
-- [ ] `associateStatus` (AssociateStatus)
-- [ ] `exemptionType` (ExemptionType)
-- [ ] `exemptionReason` (String)
-- [ ] `exemptionYear` (Integer)
-- [ ] `directorPartId` (Long)
-- [ ] `partnerCompanyName` (String)
-- [ ] `isWithdrawn` (boolean)
-- [ ] `withdrawnAt` (LocalDateTime)
-- [ ] `withdrawalReason` (String)
-- [ ] `getDisplayName()` 메서드 구현
+- [x] `id` (Long, PK)
+- [x] `memberNumber` (Integer, UNIQUE, 정회원 번호)
+- [x] `realName` (String, 실명)
+- [x] `email` (String, UNIQUE)
+- [x] `phoneNumber` (String)
+- [x] `profileImageUrl` (String)
+- [x] `grade` (UserGrade, @ManyToOne)
+- [x] `associateStatus` (AssociateStatus)
+- [x] `exemptionType` (ExemptionType)
+- [x] `exemptionReason` (String)
+- [x] `exemptionYear` (Integer)
+- [x] `directorPartId` (Long)
+- [x] `partnerCompanyName` (String)
+- [x] `isWithdrawn` (boolean)
+- [x] `withdrawnAt` (LocalDateTime)
+- [x] `withdrawalReason` (String)
+- [x] `getDisplayName()` 메서드 구현
 
 **UserGrade 엔티티 필드** (DB 테이블):
-- [ ] `id` (Long, PK)
-- [ ] `code` (String, UNIQUE - DEVELOPER, ADVISOR, etc.)
-- [ ] `name` (String - 개발자, 고문, etc.)
-- [ ] `roleName` (String - ROLE_DEVELOPER, etc.)
-- [ ] `permissionLevel` (Integer - 10, 9, 8, ...)
-- [ ] `isExecutive` (boolean)
-- [ ] `isStaff` (boolean)
-- [ ] `isSystemGrade` (boolean - 삭제 불가)
-- [ ] `displaySuffix` (String - "(고문)", "(회장)", etc.)
-- [ ] `displayOrder` (Integer)
-- [ ] `isActive` (boolean)
-- [ ] `isHigherOrEqualTo(UserGrade)` 메서드
+- [x] `id` (Long, PK)
+- [x] `code` (String, UNIQUE - DEVELOPER, ADVISOR, etc.)
+- [x] `name` (String - 개발자, 고문, etc.)
+- [x] `roleName` (String - ROLE_DEVELOPER, etc.)
+- [x] `permissionLevel` (Integer - 10, 9, 8, ...)
+- [x] `isExecutive` (boolean)
+- [x] `isStaff` (boolean)
+- [x] `isSystemGrade` (boolean - 삭제 불가)
+- [x] `displaySuffix` (String - "(고문)", "(회장)", etc.)
+- [x] `displayOrder` (Integer)
+- [x] `isActive` (boolean)
+- [x] `isHigherOrEqualTo(UserGrade)` 메서드
 
 #### 1.2.2 Repositories
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| UserRepository | `user/repository/UserRepository.java` | [ ] | P0 |
-| UserGradeRepository | `user/repository/UserGradeRepository.java` | [ ] | P0 |
-| OAuthAccountRepository | `user/repository/OAuthAccountRepository.java` | [ ] | P0 |
-| PasskeyCredentialRepository | `user/repository/PasskeyCredentialRepository.java` | [ ] | P1 |
+| UserRepository | `user/repository/UserRepository.java` | [x] | P0 |
+| UserGradeRepository | `user/repository/UserGradeRepository.java` | [x] | P0 |
+| OAuthAccountRepository | `user/repository/OAuthAccountRepository.java` | [x] | P0 |
+| PasskeyCredentialRepository | `user/repository/PasskeyCredentialRepository.java` | [x] | P1 |
+| MemberVehicleRepository | `user/repository/MemberVehicleRepository.java` | [x] | P0 |
 
 **UserRepository 메서드**:
-- [ ] `findByEmail(String email)`
-- [ ] `findByMemberNumber(Integer memberNumber)`
-- [ ] `findByPhoneNumber(String phoneNumber)`
-- [ ] `existsByEmail(String email)`
-- [ ] `existsByGradeId(Long gradeId)`
-- [ ] `findByGradeCodeAndIsWithdrawnFalse(String gradeCode)`
+- [x] `findByEmail(String email)`
+- [x] `findByMemberNumber(Integer memberNumber)`
+- [x] `findByPhoneNumber(String phoneNumber)`
+- [x] `existsByEmail(String email)`
+- [x] `existsByGradeId(Long gradeId)`
+- [x] `findByGradeCodeAndIsWithdrawnFalse(String gradeCode)`
 - [ ] `findRegularMembersForRenewal(Integer targetYear)` (연회비 갱신 대상)
 
 **UserGradeRepository 메서드**:
-- [ ] `findByCode(String code)`
-- [ ] `findByRoleName(String roleName)`
-- [ ] `findByIsActiveOrderByDisplayOrderAsc(boolean isActive)`
-- [ ] `findDeletableGrades()` (시스템 등급 제외)
-- [ ] `existsByCode(String code)`
+- [x] `findByCode(String code)`
+- [x] `findByRoleName(String roleName)`
+- [x] `findByIsActiveOrderByDisplayOrderAsc(boolean isActive)`
+- [x] `findDeletableGrades()` (시스템 등급 제외)
+- [x] `existsByCode(String code)`
 
 #### 1.2.3 Services
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| UserService | `user/service/UserService.java` | [ ] | P0 |
-| UserGradeService | `user/service/UserGradeService.java` | [ ] | P0 |
-| OAuth2UserService | `user/service/OAuth2UserService.java` | [ ] | P0 |
+| UserService | `user/service/UserService.java` | [x] | P0 |
+| UserGradeService | `user/service/UserGradeService.java` | [x] | P0 |
+| OAuth2UserService | `user/service/OAuth2UserService.java` | [x] | P0 |
 | PasskeyService | `user/service/PasskeyService.java` | [ ] | P1 |
 | ProfileService | `user/service/ProfileService.java` | [ ] | P1 |
 
 **UserService 메서드**:
-- [ ] `getUserById(Long id)`
-- [ ] `getUserByEmail(String email)`
-- [ ] `updateProfile(Long userId, ProfileUpdateRequest request)`
-- [ ] `changeGrade(Long userId, Long newGradeId, Long adminId)`
-- [ ] `withdraw(Long userId, String reason)`
-- [ ] `getDisplayName(Long userId)`
+- [x] `getUserById(Long id)`
+- [x] `getUserByEmail(String email)`
+- [x] `updateProfile(Long userId, ProfileUpdateRequest request)`
+- [x] `changeGrade(Long userId, Long newGradeId, Long adminId)`
+- [x] `withdraw(Long userId, String reason)`
+- [x] `getDisplayName(Long userId)`
 
 **UserGradeService 메서드**:
-- [ ] `getAllActiveGrades()`
-- [ ] `getGradeByCode(String code)`
+- [x] `getAllActiveGrades()`
+- [x] `getGradeByCode(String code)`
 - [ ] `createGrade(UserGradeCreateRequest request, Long creatorId)`
 - [ ] `updateGrade(Long gradeId, UserGradeUpdateRequest request)`
 - [ ] `deleteGrade(Long gradeId)` (시스템 등급 삭제 방지)
-- [ ] `getDefaultGradeForNewUser()` (ASSOCIATE 반환)
+- [x] `getDefaultGradeForNewUser()` (ASSOCIATE 반환)
 
 **OAuth2UserService 메서드**:
-- [ ] `processOAuthLogin(OAuth2UserInfo info, OAuthProvider provider)`
-- [ ] `linkOAuthAccount(Long userId, OAuth2UserInfo info)`
-- [ ] `unlinkOAuthAccount(Long userId, OAuthProvider provider)`
+- [x] `processOAuthLogin(OAuth2UserInfo info, OAuthProvider provider)`
+- [x] `linkOAuthAccount(Long userId, OAuth2UserInfo info)`
+- [x] `unlinkOAuthAccount(Long userId, OAuthProvider provider)`
 - [ ] `matchLegacyMember(String phoneNumber)` (기존 회원 매칭)
 
 #### 1.2.4 Controllers & DTOs
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| AuthController | `user/api/AuthController.java` | [ ] | P0 |
-| UserController | `user/api/UserController.java` | [ ] | P0 |
+| AuthController | `user/api/AuthController.java` | [x] | P0 |
+| UserController | `user/api/UserController.java` | [x] | P0 |
+| UserGradeController | `user/api/UserGradeController.java` | [x] | P0 |
 | ProfileController | `user/api/ProfileController.java` | [ ] | P1 |
 
 **AuthController 엔드포인트**:
-- [ ] `POST /api/v1/auth/oauth/{provider}` - OAuth 로그인
-- [ ] `POST /api/v1/auth/refresh` - 토큰 갱신
-- [ ] `POST /api/v1/auth/logout` - 로그아웃
+- [x] `POST /api/v1/auth/oauth/{provider}` - OAuth 로그인
+- [x] `POST /api/v1/auth/refresh` - 토큰 갱신
+- [x] `POST /api/v1/auth/logout` - 로그아웃
 - [ ] `POST /api/v1/auth/passkey/register` - Passkey 등록
 - [ ] `POST /api/v1/auth/passkey/authenticate` - Passkey 인증
 
 **UserController 엔드포인트**:
-- [ ] `GET /api/v1/users/me` - 내 정보 조회
-- [ ] `PUT /api/v1/users/me` - 내 정보 수정
-- [ ] `DELETE /api/v1/users/me` - 회원 탈퇴
+- [x] `GET /api/v1/users/me` - 내 정보 조회
+- [x] `PUT /api/v1/users/me` - 내 정보 수정
+- [x] `DELETE /api/v1/users/me` - 회원 탈퇴
+- [x] `GET /api/v1/users/member/{memberNumber}` - 회원 번호로 조회
 
 **DTO 목록**:
-- [ ] `OAuthLoginRequest`, `OAuthLoginResponse`
-- [ ] `TokenRefreshRequest`, `TokenRefreshResponse`
-- [ ] `UserProfileResponse`
-- [ ] `ProfileUpdateRequest`
+- [x] `OAuthLoginRequest`, `OAuthLoginResponse`
+- [x] `TokenRefreshRequest`, `TokenRefreshResponse`
+- [x] `UserProfileResponse`
+- [x] `ProfileUpdateRequest`
+- [x] `UserGradeResponse`
 - [ ] `RealNameChangeRequest`
 - [ ] `UserGradeCreateRequest`, `UserGradeUpdateRequest`
 - [ ] `PasskeyRegistrationRequest`, `PasskeyRegistrationResponse`
@@ -225,10 +232,10 @@
 #### 1.2.5 Events
 | 항목 | 파일 경로 | 상태 | 우선순위 |
 |------|----------|------|----------|
-| UserRegisteredEvent | `user/event/UserRegisteredEvent.java` | [ ] | P1 |
-| UserGradeChangedEvent | `user/event/UserGradeChangedEvent.java` | [ ] | P1 |
-| UserWithdrawnEvent | `user/event/UserWithdrawnEvent.java` | [ ] | P2 |
-| UserEventPublisher | `user/event/UserEventPublisher.java` | [ ] | P1 |
+| UserRegisteredEvent | `user/event/UserRegisteredEvent.java` | [x] | P1 |
+| UserGradeChangedEvent | `user/event/UserGradeChangedEvent.java` | [x] | P1 |
+| UserWithdrawnEvent | `user/event/UserWithdrawnEvent.java` | [x] | P2 |
+| UserEventPublisher | `user/event/UserEventPublisher.java` | [x] | P1 |
 
 ---
 
@@ -706,7 +713,7 @@
 ### Flyway Migration Files
 | 버전 | 파일명 | 내용 | 상태 |
 |------|--------|------|------|
-| V1 | `V1__create_user_module_tables.sql` | users, user_grades, oauth_accounts, passkey_credentials | [ ] |
+| V1 | `V1__create_user_module_tables.sql` | users, user_grades, oauth_accounts, passkey_credentials, member_vehicles | [x] |
 | V2 | `V2__create_membership_module_tables.sql` | membership_applications, application_documents, ocr_results, payment_records, membership_periods, director_parts, member_vehicles, annual_fee_configs | [ ] |
 | V3 | `V3__create_community_module_tables.sql` | boards, posts, comments, attachments, permission_groups, board_permission_mappings, user_permission_groups | [ ] |
 | V4 | `V4__create_landing_module_tables.sql` | club_histories, executives, events, event_participants, instagram_posts | [ ] |
@@ -723,9 +730,9 @@
 ### 외부 서비스 연동
 | 서비스 | 구현 항목 | 상태 | 우선순위 |
 |--------|----------|------|----------|
-| Google OAuth2 | `OAuth2UserService` | [ ] | P0 |
-| Apple OAuth2 | `OAuth2UserService` | [ ] | P0 |
-| Naver OAuth2 | `OAuth2UserService` | [ ] | P0 |
+| Google OAuth2 | `OAuth2UserService` | [x] | P0 |
+| Apple OAuth2 | `OAuth2UserService` | [x] | P0 |
+| Naver OAuth2 | `OAuth2UserService` | [x] | P0 |
 | DigitalOcean Spaces | `FileUploadService` (S3 호환) | [ ] | P0 |
 | OCR (PaddleOCR/Tesseract) | `PaddleOcrService` | [ ] | P1 |
 | 금융결제원 오픈뱅킹 | `OpenBankingService` | [ ] | P2 |
@@ -738,18 +745,18 @@
 
 ## Configuration Files
 
-### application.yml 설정
+### application.properties 설정
 | 설정 항목 | 상태 | 우선순위 |
 |----------|------|----------|
-| 데이터베이스 연결 (PostgreSQL) | [ ] | P0 |
-| JPA/Hibernate 설정 | [ ] | P0 |
-| OAuth2 클라이언트 설정 (Google, Apple, Naver) | [ ] | P0 |
-| JWT 설정 (secret, expiration) | [ ] | P0 |
-| DigitalOcean Spaces 설정 | [ ] | P0 |
+| 데이터베이스 연결 (PostgreSQL) | [x] | P0 |
+| JPA/Hibernate 설정 | [x] | P0 |
+| OAuth2 클라이언트 설정 (Google, Apple, Naver) | [x] | P0 |
+| JWT 설정 (secret, expiration) | [x] | P0 |
+| DigitalOcean Spaces 설정 | [x] | P0 |
 | gRPC 서버 설정 | [ ] | P1 |
-| Flyway 마이그레이션 설정 | [ ] | P0 |
-| Spring Modulith 설정 | [ ] | P1 |
-| 로깅 설정 | [ ] | P1 |
+| Flyway 마이그레이션 설정 | [x] | P0 |
+| Spring Modulith 설정 | [x] | P1 |
+| 로깅 설정 | [x] | P1 |
 | 프로파일별 설정 분리 (dev, prod) | [ ] | P1 |
 
 ---
@@ -778,3 +785,4 @@
 | 날짜 | 변경 내용 |
 |------|----------|
 | 2025-01-01 | 초기 TODO 문서 생성 |
+| 2025-12-30 | Phase 1 (Foundation) 구현 완료 - Shared Kernel, User Module |
