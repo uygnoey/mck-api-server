@@ -2,6 +2,7 @@ package kr.mclub.apiserver.user.domain;
 
 import jakarta.persistence.*;
 import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import kr.mclub.apiserver.shared.domain.CommonCode;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,22 +27,22 @@ public class MemberVehicle extends BaseTimeEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "car_number", nullable = false, length = 20)
-    private String carNumber;  // 차량번호
+    @Column(name = "license_plate", nullable = false, length = 20)
+    private String licensePlate;  // 차량번호
 
     @Column(name = "vin_number", nullable = false, unique = true, length = 50)
     private String vinNumber;  // 차대번호 (중복 불가)
 
-    @Column(name = "car_model", nullable = false, length = 100)
-    private String carModel;  // 차종 (예: M3, M4, M5 등)
+    @Column(name = "model_name", nullable = false, length = 100)
+    private String modelName;  // 차종 (예: M3, M4, M5 등)
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ownership_type", nullable = false, length = 30)
-    private VehicleOwnershipType ownershipType;  // 소유 유형
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ownership_type_code_id", nullable = false)
+    private CommonCode ownershipType;  // 소유 유형 (CommonCode)
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
-    private VehicleStatus status = VehicleStatus.ACTIVE;  // 상태
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_code_id", nullable = false)
+    private CommonCode status;  // 상태 (CommonCode)
 
     @Column(name = "registered_at", nullable = false)
     private LocalDate registeredAt;  // 등록일
@@ -56,15 +57,15 @@ public class MemberVehicle extends BaseTimeEntity {
     private boolean isPrimary = false;  // 대표 차량 여부
 
     @Builder
-    public MemberVehicle(Long userId, String carNumber, String vinNumber, String carModel,
-                         VehicleOwnershipType ownershipType, LocalDate registeredAt) {
+    public MemberVehicle(Long userId, String licensePlate, String vinNumber, String modelName,
+                         CommonCode ownershipType, CommonCode status, LocalDate registeredAt) {
         this.userId = userId;
-        this.carNumber = carNumber;
+        this.licensePlate = licensePlate;
         this.vinNumber = vinNumber;
-        this.carModel = carModel;
+        this.modelName = modelName;
         this.ownershipType = ownershipType;
+        this.status = status;
         this.registeredAt = registeredAt != null ? registeredAt : LocalDate.now();
-        this.status = VehicleStatus.ACTIVE;
     }
 
     /**
@@ -84,22 +85,14 @@ public class MemberVehicle extends BaseTimeEntity {
     }
 
     /**
-     * 차량 매각 처리
-     * Mark vehicle as sold
+     * 차량 매각 처리 (6개월 유예 기간)
+     * Mark vehicle as sold with 6-month grace period
      */
-    public void markAsSold() {
-        this.status = VehicleStatus.SOLD;
-        this.soldAt = LocalDate.now();
+    public void markAsSold(LocalDate soldAt, CommonCode gracePeriodStatus) {
+        this.soldAt = soldAt;
+        this.status = gracePeriodStatus;
+        this.gracePeriodEndAt = soldAt.plusMonths(6);
         this.isPrimary = false;
-    }
-
-    /**
-     * 유예 기간 시작 (M차량이 없을 때)
-     * Start grace period (when no M vehicle)
-     */
-    public void startGracePeriod(LocalDate endDate) {
-        this.status = VehicleStatus.GRACE_PERIOD;
-        this.gracePeriodEndAt = endDate;
     }
 
     /**
@@ -107,7 +100,7 @@ public class MemberVehicle extends BaseTimeEntity {
      * Check if grace period is expired
      */
     public boolean isGracePeriodExpired() {
-        if (status != VehicleStatus.GRACE_PERIOD) {
+        if (status == null || !"GRACE_PERIOD".equals(status.getCode())) {
             return false;
         }
         return gracePeriodEndAt != null && gracePeriodEndAt.isBefore(LocalDate.now());
@@ -117,8 +110,16 @@ public class MemberVehicle extends BaseTimeEntity {
      * 차량 정보 업데이트
      * Update vehicle information
      */
-    public void updateInfo(String carNumber, String carModel) {
-        this.carNumber = carNumber;
-        this.carModel = carModel;
+    public void updateInfo(String licensePlate, String modelName) {
+        this.licensePlate = licensePlate;
+        this.modelName = modelName;
+    }
+
+    /**
+     * 차량 상태 변경
+     * Change vehicle status
+     */
+    public void changeStatus(CommonCode newStatus) {
+        this.status = newStatus;
     }
 }

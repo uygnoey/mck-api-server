@@ -27,6 +27,10 @@ public enum ErrorCode {
     OAUTH_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A005", "OAuth 인증에 실패했습니다."),
     PASSKEY_VERIFICATION_FAILED(HttpStatus.UNAUTHORIZED, "A006", "Passkey 인증에 실패했습니다."),
     CANNOT_DELETE_LAST_CREDENTIAL(HttpStatus.BAD_REQUEST, "A007", "최소 하나의 인증 수단이 필요합니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A008", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    PASSWORD_NOT_SET(HttpStatus.BAD_REQUEST, "A009", "비밀번호가 설정되지 않았습니다."),
+    USER_WITHDRAWN(HttpStatus.FORBIDDEN, "A010", "탈퇴한 사용자입니다."),
+    USER_INACTIVE(HttpStatus.FORBIDDEN, "A011", "비활성화된 계정입니다."),
 
     // User Errors (사용자 에러)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),

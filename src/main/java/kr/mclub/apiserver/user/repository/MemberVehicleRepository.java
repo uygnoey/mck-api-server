@@ -1,7 +1,7 @@
 package kr.mclub.apiserver.user.repository;
 
+import kr.mclub.apiserver.shared.domain.CommonCode;
 import kr.mclub.apiserver.user.domain.MemberVehicle;
-import kr.mclub.apiserver.user.domain.VehicleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,16 +17,27 @@ import java.util.Optional;
 public interface MemberVehicleRepository extends JpaRepository<MemberVehicle, Long> {
 
     /**
-     * 사용자 ID로 조회
-     * Find by user ID
+     * 사용자 ID로 조회 (최신순)
+     * Find by user ID ordered by registration date desc
      */
-    List<MemberVehicle> findByUserId(Long userId);
+    List<MemberVehicle> findByUserIdOrderByIsPrimaryDescRegisteredAtDesc(Long userId);
 
     /**
-     * 사용자 ID로 활성 차량 조회
+     * 사용자 ID와 상태로 조회
+     * Find by user ID and status
+     */
+    List<MemberVehicle> findByUserIdAndStatus(Long userId, CommonCode status);
+
+    /**
+     * 사용자의 활성 차량 조회
      * Find active vehicles by user ID
      */
-    List<MemberVehicle> findByUserIdAndStatus(Long userId, VehicleStatus status);
+    @Query("SELECT mv FROM MemberVehicle mv " +
+           "WHERE mv.userId = :userId " +
+           "AND mv.status.codeGroup = 'VEHICLE_STATUS' " +
+           "AND mv.status.code = 'ACTIVE' " +
+           "ORDER BY mv.isPrimary DESC, mv.registeredAt DESC")
+    List<MemberVehicle> findActiveVehiclesByUserId(@Param("userId") Long userId);
 
     /**
      * 차대번호로 조회
@@ -35,10 +46,22 @@ public interface MemberVehicleRepository extends JpaRepository<MemberVehicle, Lo
     Optional<MemberVehicle> findByVinNumber(String vinNumber);
 
     /**
+     * 차량번호로 조회
+     * Find by license plate
+     */
+    Optional<MemberVehicle> findByLicensePlate(String licensePlate);
+
+    /**
      * 차대번호 존재 여부
      * Check if VIN number exists
      */
     boolean existsByVinNumber(String vinNumber);
+
+    /**
+     * 차량번호 존재 여부
+     * Check if license plate exists
+     */
+    boolean existsByLicensePlate(String licensePlate);
 
     /**
      * 사용자의 대표 차량 조회
@@ -50,19 +73,36 @@ public interface MemberVehicleRepository extends JpaRepository<MemberVehicle, Lo
      * 유예 기간 만료된 차량 조회
      * Find vehicles with expired grace period
      */
-    @Query("SELECT v FROM MemberVehicle v WHERE v.status = 'GRACE_PERIOD' AND v.gracePeriodEndAt < :date")
+    @Query("SELECT mv FROM MemberVehicle mv " +
+           "WHERE mv.status.codeGroup = 'VEHICLE_STATUS' " +
+           "AND mv.status.code = 'GRACE_PERIOD' " +
+           "AND mv.gracePeriodEndAt < :date")
     List<MemberVehicle> findExpiredGracePeriodVehicles(@Param("date") LocalDate date);
 
     /**
-     * 사용자의 활성 차량 수
-     * Count active vehicles for user
+     * 사용자의 활성 차량 존재 여부
+     * Check if user has active vehicle
      */
-    long countByUserIdAndStatus(Long userId, VehicleStatus status);
+    @Query("SELECT COUNT(mv) > 0 FROM MemberVehicle mv " +
+           "WHERE mv.userId = :userId " +
+           "AND mv.status.codeGroup = 'VEHICLE_STATUS' " +
+           "AND mv.status.code = 'ACTIVE'")
+    boolean hasActiveVehicle(@Param("userId") Long userId);
 
     /**
-     * 사용자에게 활성 차량이 있는지 확인
-     * Check if user has any active vehicle
+     * 차량 상태별 조회
+     * Find vehicles by status
      */
-    @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM MemberVehicle v WHERE v.userId = :userId AND v.status = 'ACTIVE'")
-    boolean hasActiveVehicle(@Param("userId") Long userId);
+    List<MemberVehicle> findByStatusOrderByRegisteredAtDesc(CommonCode status);
+
+    /**
+     * 모델별 활성 차량 개수 조회
+     * Count active vehicles by model
+     */
+    @Query("SELECT mv.modelName, COUNT(mv) FROM MemberVehicle mv " +
+           "WHERE mv.status.codeGroup = 'VEHICLE_STATUS' " +
+           "AND mv.status.code = 'ACTIVE' " +
+           "GROUP BY mv.modelName " +
+           "ORDER BY COUNT(mv) DESC")
+    List<Object[]> countActiveVehiclesByModel();
 }

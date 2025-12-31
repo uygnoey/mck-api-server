@@ -73,6 +73,10 @@ CREATE TABLE users (
     phone_number VARCHAR(20),
     profile_image_url VARCHAR(500),
 
+    -- 인증 정보 (자체 로그인)
+    password VARCHAR(255),
+    password_changed_at TIMESTAMP,
+
     -- 등급 관련
     grade_id BIGINT NOT NULL REFERENCES user_grades(id),
     associate_status VARCHAR(20),
@@ -171,36 +175,4 @@ COMMENT ON TABLE passkey_credentials IS 'WebAuthn Passkey 인증 정보';
 COMMENT ON COLUMN passkey_credentials.credential_id IS 'Passkey Credential ID (고유)';
 COMMENT ON COLUMN passkey_credentials.sign_counter IS '서명 카운터 (재생 공격 방지)';
 
--- ========================================
--- 5. member_vehicles (회원 차량) - 다중 차량 지원
--- ========================================
-CREATE TABLE member_vehicles (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    car_number VARCHAR(20) NOT NULL,
-    vin_number VARCHAR(50) NOT NULL UNIQUE,
-    car_model VARCHAR(100) NOT NULL,
-    ownership_type VARCHAR(30) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    registered_at DATE NOT NULL DEFAULT CURRENT_DATE,
-    sold_at DATE,
-    grace_period_end_at DATE,
-    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Indexes
-CREATE INDEX idx_member_vehicles_user ON member_vehicles(user_id);
-CREATE INDEX idx_member_vehicles_vin ON member_vehicles(vin_number);
-CREATE INDEX idx_member_vehicles_status ON member_vehicles(status);
-CREATE INDEX idx_member_vehicles_primary ON member_vehicles(user_id, is_primary);
-CREATE INDEX idx_member_vehicles_grace ON member_vehicles(status, grace_period_end_at)
-    WHERE status = 'GRACE_PERIOD';
-
--- Comments
-COMMENT ON TABLE member_vehicles IS '회원 차량 정보 (다중 차량 등록 가능)';
-COMMENT ON COLUMN member_vehicles.vin_number IS '차대번호 (중복 불가, 이중 등록 방지)';
-COMMENT ON COLUMN member_vehicles.ownership_type IS '소유 유형: PERSONAL, CORPORATE, LEASE, RENTAL, CORPORATE_LEASE, CORPORATE_RENTAL';
-COMMENT ON COLUMN member_vehicles.status IS '상태: ACTIVE(현재 소유), SOLD(매각), GRACE_PERIOD(유예기간)';
-COMMENT ON COLUMN member_vehicles.grace_period_end_at IS 'M차량 없을 때 1년 유예 종료일';
+-- Note: member_vehicles 테이블은 V2에서 common_codes와 함께 생성됩니다.

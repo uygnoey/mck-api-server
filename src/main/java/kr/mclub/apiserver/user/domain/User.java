@@ -34,6 +34,12 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(length = 255)
+    private String password;  // 암호화된 비밀번호 (BCrypt), NULL이면 OAuth/Passkey 전용
+
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;  // 비밀번호 변경 일시
+
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
@@ -86,10 +92,11 @@ public class User extends BaseTimeEntity {
     private List<PasskeyCredential> passkeyCredentials = new ArrayList<>();
 
     @Builder
-    public User(String realName, String email, String phoneNumber, String profileImageUrl,
+    public User(String realName, String email, String password, String phoneNumber, String profileImageUrl,
                 UserGrade grade, AssociateStatus associateStatus) {
         this.realName = realName;
         this.email = email;
+        this.password = password;
         this.phoneNumber = phoneNumber;
         this.profileImageUrl = profileImageUrl;
         this.grade = grade;
@@ -243,5 +250,22 @@ public class User extends BaseTimeEntity {
             return exemptionYear.equals(year);
         }
         return false;
+    }
+
+    /**
+     * 비밀번호 변경
+     * Change password (already encrypted)
+     */
+    public void changePassword(String encryptedPassword) {
+        this.password = encryptedPassword;
+        this.passwordChangedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 비밀번호 설정 여부 확인
+     * Check if user has password set
+     */
+    public boolean hasPassword() {
+        return this.password != null && !this.password.isEmpty();
     }
 }

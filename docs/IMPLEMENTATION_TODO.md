@@ -714,7 +714,7 @@
 | 버전 | 파일명 | 내용 | 상태 |
 |------|--------|------|------|
 | V1 | `V1__create_user_module_tables.sql` | users, user_grades, oauth_accounts, passkey_credentials, member_vehicles | [x] |
-| V2 | `V2__create_membership_module_tables.sql` | membership_applications, application_documents, ocr_results, payment_records, membership_periods, director_parts, member_vehicles, annual_fee_configs | [ ] |
+| V2 | `V2__create_membership_module_tables.sql` | membership_applications, application_documents, ocr_results, payment_records, membership_periods, director_parts, member_vehicles, annual_fee_configs | [x] |
 | V3 | `V3__create_community_module_tables.sql` | boards, posts, comments, attachments, permission_groups, board_permission_mappings, user_permission_groups | [ ] |
 | V4 | `V4__create_landing_module_tables.sql` | club_histories, executives, events, event_participants, instagram_posts | [ ] |
 | V5 | `V5__create_admin_module_tables.sql` | audit_logs | [ ] |
