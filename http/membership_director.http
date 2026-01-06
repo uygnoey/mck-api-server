@@ -1,0 +1,293 @@
+### BMW M Club Korea API - Director Part Management Tests
+### 이사진 파트 관리 API 테스트
+
+### 환경 변수 설정
+@baseUrl = http://localhost:8080
+@contentType = application/json
+@accessToken = eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZ3JhZGUiOiJBU1NPQ0lBVEUiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzY3MTQ4OTIyLCJleHAiOjE3NjcxNDk4MjJ9.BuqFKLrCmLEtoOItESqC9RxdnEuBwjz8ZkCp79Z49-omqLAGxu4R34n66vYeyruC
+
+### 1. 이사진 파트 생성 (관리자) - 성공
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=행사&description=행사%20기획%20및%20운영&sortOrder=1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사",
+#     "description": "행사 기획 및 운영",
+#     "displayOrder": 1,
+#     "isActive": true,
+#     "canManageMembers": false,
+#     "canManageEvents": false,
+#     "canManageBoards": false,
+#     "canManagePayments": false,
+#     "createdBy": 1,
+#     "createdAt": "2026-01-06T18:30:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 2. 모든 이사진 파트 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/directors/parts
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "name": "행사",
+#       "description": "행사 기획 및 운영",
+#       "displayOrder": 1,
+#       "isActive": true
+#     },
+#     {
+#       "id": 2,
+#       "name": "홍보",
+#       "description": "대외 홍보 및 SNS 관리",
+#       "displayOrder": 2,
+#       "isActive": true
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 3. 활성 이사진 파트 목록 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/directors/parts/active
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 4. 이사진 파트 ID로 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/directors/parts/1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사",
+#     "description": "행사 기획 및 운영",
+#     "displayOrder": 1,
+#     "isActive": true,
+#     "canManageMembers": false,
+#     "canManageEvents": true,
+#     "canManageBoards": false,
+#     "canManagePayments": false
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 5. 이사진 파트 정보 업데이트 (관리자) - 성공
+PUT {{baseUrl}}/api/v1/membership/directors/parts/1?partName=행사기획&description=클럽%20행사%20기획%20및%20진행&sortOrder=1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사기획",
+#     "description": "클럽 행사 기획 및 진행",
+#     "displayOrder": 1,
+#     "isActive": true
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 6. 이사진 파트 활성화 (관리자) - 성공
+POST {{baseUrl}}/api/v1/membership/directors/parts/1/activate
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사기획",
+#     "isActive": true
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 7. 이사진 파트 비활성화 (관리자) - 성공
+POST {{baseUrl}}/api/v1/membership/directors/parts/1/deactivate
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사기획",
+#     "isActive": false
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 8. 이사진 파트 삭제 (관리자) - 성공
+DELETE {{baseUrl}}/api/v1/membership/directors/parts/1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": null,
+#   "message": "Success"
+# }
+
+###
+
+### 9. 이사진 파트 표준 권한 설정 (관리자) - 성공
+POST {{baseUrl}}/api/v1/membership/directors/parts/1/permissions?canManageMembers=false&canManageEvents=true&canManageBoards=false&canManagePayments=false
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사",
+#     "canManageMembers": false,
+#     "canManageEvents": true,
+#     "canManageBoards": false,
+#     "canManagePayments": false
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 10. 이사진 파트 커스텀 권한 설정 (관리자) - 성공
+POST {{baseUrl}}/api/v1/membership/directors/parts/1/permissions/custom
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "canCreateEvents": true,
+  "canEditEvents": true,
+  "canDeleteEvents": false,
+  "canApproveEvents": true,
+  "customPermissions": {
+    "event_management": "full",
+    "venue_booking": "limited"
+  }
+}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "name": "행사",
+#     "customPermissions": {
+#       "canCreateEvents": true,
+#       "canEditEvents": true,
+#       "canDeleteEvents": false,
+#       "canApproveEvents": true,
+#       "customPermissions": {
+#         "event_management": "full",
+#         "venue_booking": "limited"
+#       }
+#     }
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 11. 이사진 파트 생성 (실패 - 중복 파트명)
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=행사&description=행사%20파트&sortOrder=1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "INVALID_INPUT",
+#     "message": "이미 존재하는 파트명입니다: 행사"
+#   }
+# }
+
+###
+
+### 12. 이사진 파트 조회 (실패 - 존재하지 않는 ID)
+GET {{baseUrl}}/api/v1/membership/directors/parts/999
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "RESOURCE_NOT_FOUND",
+#     "message": "파트를 찾을 수 없습니다"
+#   }
+# }
+
+###
+
+### 13. 이사진 파트 삭제 (실패 - 이미 할당된 이사 존재)
+DELETE {{baseUrl}}/api/v1/membership/directors/parts/1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "PART_IN_USE",
+#     "message": "파트가 사용 중입니다. 할당된 이사가 존재합니다."
+#   }
+# }
+
+###
+
+### 14. 권한 없이 파트 생성 시도 (실패 - 403 Forbidden)
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=재무&description=재무%20관리&sortOrder=3
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "UNAUTHORIZED",
+#     "message": "인증이 필요합니다."
+#   }
+# }
+
+###
+
+### 15. 여러 파트 생성 (연속 테스트)
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=홍보&description=대외%20홍보%20및%20SNS%20관리&sortOrder=2
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=총무&description=운영%20총괄%20및%20문서%20관리&sortOrder=3
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=재무&description=회계%20및%20재정%20관리&sortOrder=4
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{baseUrl}}/api/v1/membership/directors/parts?partName=기술&description=웹사이트%20및%20IT%20인프라%20관리&sortOrder=5
+Authorization: Bearer {{accessToken}}
+
+###

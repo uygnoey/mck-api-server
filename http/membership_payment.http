@@ -1,0 +1,268 @@
+### BMW M Club Korea API - Payment Tests
+### 결제 관리 API 테스트
+
+### 환경 변수 설정
+@baseUrl = http://localhost:8080
+@contentType = application/json
+@accessToken = eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZ3JhZGUiOiJBU1NPQ0lBVEUiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzY3MTQ4OTIyLCJleHAiOjE3NjcxNDk4MjJ9.BuqFKLrCmLEtoOItESqC9RxdnEuBwjz8ZkCp79Z49-omqLAGxu4R34n66vYeyruC
+
+### 1. 결제 기록 등록 - 가입비 (성공)
+POST {{baseUrl}}/api/v1/membership/payments
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "applicationId": 1,
+  "paymentType": "ENROLLMENT_FEE",
+  "targetYear": 2026,
+  "amount": 400000,
+  "depositorName": "홍길동",
+  "depositDate": "2026-01-06"
+}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "applicationId": 1,
+#     "paymentType": "ENROLLMENT_FEE",
+#     "targetYear": 2026,
+#     "amount": 400000,
+#     "depositorName": "홍길동",
+#     "depositDate": "2026-01-06",
+#     "status": "PENDING",
+#     "confirmedBy": null,
+#     "confirmedAt": null,
+#     "autoConfirmed": false,
+#     "createdAt": "2026-01-06T17:40:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 2. 결제 기록 등록 - 연회비 (성공)
+POST {{baseUrl}}/api/v1/membership/payments
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "applicationId": null,
+  "paymentType": "ANNUAL_FEE",
+  "targetYear": 2026,
+  "amount": 200000,
+  "depositorName": "홍길동",
+  "depositDate": "2026-01-06"
+}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 2,
+#     "userId": 1,
+#     "applicationId": null,
+#     "paymentType": "ANNUAL_FEE",
+#     "targetYear": 2026,
+#     "amount": 200000,
+#     "depositorName": "홍길동",
+#     "depositDate": "2026-01-06",
+#     "status": "PENDING"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 3. 내 결제 기록 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/payments/me
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "paymentType": "ENROLLMENT_FEE",
+#       "amount": 400000,
+#       "status": "PENDING",
+#       "depositDate": "2026-01-06"
+#     },
+#     {
+#       "id": 2,
+#       "paymentType": "ANNUAL_FEE",
+#       "amount": 200000,
+#       "status": "PENDING",
+#       "depositDate": "2026-01-06"
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 4. 결제 ID로 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/payments/1
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 5. 신청서의 결제 기록 조회 (관리자)
+GET {{baseUrl}}/api/v1/membership/payments/application/1
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 6. 상태별 결제 목록 조회 (관리자)
+GET {{baseUrl}}/api/v1/membership/payments?status=PENDING
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 7. 대기 중인 결제 목록 조회 (관리자)
+GET {{baseUrl}}/api/v1/membership/payments/pending
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "userId": 1,
+#       "paymentType": "ENROLLMENT_FEE",
+#       "amount": 400000,
+#       "depositorName": "홍길동",
+#       "depositDate": "2026-01-06",
+#       "status": "PENDING"
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 8. 결제 확인 (관리자)
+POST {{baseUrl}}/api/v1/membership/payments/1/confirm
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "status": "CONFIRMED",
+#     "confirmedBy": 1,
+#     "confirmedAt": "2026-01-06T17:45:00",
+#     "autoConfirmed": false
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 9. 결제 취소 (관리자)
+POST {{baseUrl}}/api/v1/membership/payments/1/cancel?reason=중복%20입금
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "status": "CANCELLED",
+#     "cancellationReason": "중복 입금",
+#     "cancelledBy": 1,
+#     "cancelledAt": "2026-01-06T17:46:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 10. 결제 환불 (관리자)
+POST {{baseUrl}}/api/v1/membership/payments/1/refund?refundAmount=400000
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "status": "REFUNDED",
+#     "refundAmount": 400000,
+#     "refundedAt": "2026-01-06T17:47:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 11. 연회비 납부 여부 확인 (성공)
+GET {{baseUrl}}/api/v1/membership/payments/annual-fee/check?year=2026
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": false,
+#   "message": "Success"
+# }
+
+###
+
+### 12. 결제 기록 등록 (실패 - 금액 누락)
+POST {{baseUrl}}/api/v1/membership/payments
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "paymentType": "ENROLLMENT_FEE",
+  "targetYear": 2026,
+  "depositorName": "홍길동",
+  "depositDate": "2026-01-06"
+}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "INVALID_INPUT",
+#     "message": "필수 입력값이 누락되었습니다."
+#   }
+# }
+
+###
+
+### 13. 결제 확인 (실패 - 이미 확인된 결제)
+POST {{baseUrl}}/api/v1/membership/payments/1/confirm
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "PAYMENT_ALREADY_CONFIRMED",
+#     "message": "이미 확인된 결제입니다."
+#   }
+# }
+
+###
+
+### 14. 결제 환불 (실패 - 확인되지 않은 결제)
+POST {{baseUrl}}/api/v1/membership/payments/2/refund?refundAmount=200000
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "INVALID_PAYMENT_STATUS",
+#     "message": "확인된 결제만 환불할 수 있습니다."
+#   }
+# }
+
+###

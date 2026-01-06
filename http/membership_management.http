@@ -1,0 +1,340 @@
+### BMW M Club Korea API - Membership Management Tests
+### 멤버십 관리 API 테스트 (서류, 차량, 갱신)
+
+### 환경 변수 설정
+@baseUrl = http://localhost:8080
+@contentType = application/json
+@accessToken = eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZ3JhZGUiOiJBU1NPQ0lBVEUiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzY3MTQ4OTIyLCJleHAiOjE3NjcxNDk4MjJ9.BuqFKLrCmLEtoOItESqC9RxdnEuBwjz8ZkCp79Z49-omqLAGxu4R34n66vYeyruC
+
+# ==================== 서류 관리 ====================
+
+### 1. 서류 업로드 등록 (성공)
+POST {{baseUrl}}/api/v1/membership/management/applications/1/documents
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "documentType": "VEHICLE_REGISTRATION",
+  "fileUrl": "https://example.com/documents/vehicle_reg_001.pdf",
+  "originalFileName": "차량등록증.pdf",
+  "fileSize": 2048576,
+  "contentType": "application/pdf"
+}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "applicationId": 1,
+#     "documentType": "VEHICLE_REGISTRATION",
+#     "fileUrl": "https://example.com/documents/vehicle_reg_001.pdf",
+#     "originalFileName": "차량등록증.pdf",
+#     "fileSize": 2048576,
+#     "contentType": "application/pdf",
+#     "verificationStatus": "PENDING",
+#     "ocrResultId": null,
+#     "createdAt": "2026-01-06T18:00:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 2. 신청서의 모든 서류 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/management/applications/1/documents
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "documentType": "VEHICLE_REGISTRATION",
+#       "verificationStatus": "PENDING",
+#       "originalFileName": "차량등록증.pdf"
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 3. 서류 검증 승인 (관리자)
+POST {{baseUrl}}/api/v1/membership/management/documents/1/approve
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "verificationStatus": "VERIFIED",
+#     "verifiedBy": 1,
+#     "verifiedAt": "2026-01-06T18:05:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 4. 서류 검증 반려 (관리자)
+POST {{baseUrl}}/api/v1/membership/management/documents/1/reject?reason=파일%20손상
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "verificationStatus": "REJECTED",
+#     "rejectionReason": "파일 손상",
+#     "verifiedBy": 1,
+#     "verifiedAt": "2026-01-06T18:05:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 5. 서류의 OCR 결과 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/management/documents/1/ocr
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공 - OCR 결과 있음):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "documentId": 1,
+#     "ocrProvider": "PADDLE_OCR",
+#     "confidenceScore": 0.95,
+#     "isSuccess": true,
+#     "extractedData": {
+#       "carNumber": "12가3456",
+#       "vinNumber": "WBSWD93508P123456",
+#       "ownerName": "홍길동"
+#     },
+#     "isMatched": true
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 6. OCR 재처리 요청 (관리자)
+POST {{baseUrl}}/api/v1/membership/management/documents/1/ocr/reprocess
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 7. 서류 업로드 (실패 - 중복 서류 유형)
+POST {{baseUrl}}/api/v1/membership/management/applications/1/documents
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "documentType": "VEHICLE_REGISTRATION",
+  "fileUrl": "https://example.com/documents/vehicle_reg_002.pdf",
+  "originalFileName": "차량등록증2.pdf",
+  "fileSize": 2048576,
+  "contentType": "application/pdf"
+}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "DOCUMENT_ALREADY_EXISTS",
+#     "message": "이미 등록된 서류 유형입니다: VEHICLE_REGISTRATION"
+#   }
+# }
+
+###
+
+# ==================== 차량 관리 ====================
+
+### 8. 차량 등록 (성공)
+POST {{baseUrl}}/api/v1/membership/management/vehicles?carNumber=12가3456&vinNumber=WBSWD93508P123456&carModel=BMW%20M3%20Competition&ownershipType=PERSONAL&isPrimary=true
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "carNumber": "12가3456",
+#     "vinNumber": "WBSWD93508P123456",
+#     "carModel": "BMW M3 Competition",
+#     "ownershipType": "PERSONAL",
+#     "status": "ACTIVE",
+#     "isPrimary": true,
+#     "registeredAt": "2026-01-06",
+#     "createdAt": "2026-01-06T18:10:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 9. 내 차량 목록 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/management/vehicles/me
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "carNumber": "12가3456",
+#       "carModel": "BMW M3 Competition",
+#       "isPrimary": true,
+#       "status": "ACTIVE"
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 10. 차량 정보 업데이트 (성공)
+PUT {{baseUrl}}/api/v1/membership/management/vehicles/1?carNumber=12가3456&carModel=BMW%20M3%20CS
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 11. 주 차량 설정 (성공)
+POST {{baseUrl}}/api/v1/membership/management/vehicles/1/primary
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 12. 차량 삭제 (성공)
+DELETE {{baseUrl}}/api/v1/membership/management/vehicles/1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": null,
+#   "message": "Success"
+# }
+
+###
+
+### 13. 차량 등록 (실패 - 중복 차대번호)
+POST {{baseUrl}}/api/v1/membership/management/vehicles?carNumber=34나5678&vinNumber=WBSWD93508P123456&carModel=BMW%20M4&ownershipType=PERSONAL&isPrimary=false
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "DUPLICATE_VIN_NUMBER",
+#     "message": "이미 등록된 차대번호입니다: WBSWD93508P123456"
+#   }
+# }
+
+###
+
+# ==================== 멤버십 갱신 ====================
+
+### 14. 내 활성 멤버십 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/management/periods/me/active
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "startYear": 2026,
+#     "endYear": 2026,
+#     "status": "ACTIVE",
+#     "isRenewed": false,
+#     "createdAt": "2026-01-06T18:15:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 15. 내 모든 멤버십 기간 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/management/periods/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 16. 멤버십 갱신 가능 여부 확인 (성공)
+GET {{baseUrl}}/api/v1/membership/management/periods/can-renew?targetYear=2027
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": true,
+#   "message": "Success"
+# }
+
+###
+
+### 17. 초기 멤버십 기간 생성 (관리자)
+POST {{baseUrl}}/api/v1/membership/management/periods/initial?userId=1&paymentId=1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "startYear": 2026,
+#     "endYear": 2026,
+#     "status": "ACTIVE",
+#     "createdAt": "2026-01-06T18:20:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 18. 멤버십 갱신 (관리자)
+POST {{baseUrl}}/api/v1/membership/management/periods/renew?userId=1&paymentId=2
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 2,
+#     "userId": 1,
+#     "startYear": 2027,
+#     "endYear": 2027,
+#     "status": "ACTIVE",
+#     "isRenewed": true,
+#     "renewalPaymentId": 2,
+#     "renewedAt": "2026-01-06T18:25:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 19. 초기 멤버십 생성 (실패 - 이미 존재)
+POST {{baseUrl}}/api/v1/membership/management/periods/initial?userId=1&paymentId=1
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "MEMBERSHIP_ALREADY_RENEWED",
+#     "message": "2026년도 멤버십이 이미 존재합니다"
+#   }
+# }
+
+###
