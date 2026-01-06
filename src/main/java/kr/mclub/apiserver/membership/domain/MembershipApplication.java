@@ -1,29 +1,31 @@
 package kr.mclub.apiserver.membership.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
-import kr.mclub.apiserver.shared.domain.CommonCode;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import kr.mclub.apiserver.user.domain.VehicleOwnershipType;
 
 /**
- * 정회원 가입 신청서 / Membership Application
- *
- * <p>준회원이 정회원으로 승급하기 위한 신청서 정보를 관리합니다.</p>
- *
- * <h3>신청 프로세스</h3>
- * <ol>
- *   <li>신청서 작성 및 제출 (PENDING_DOCUMENTS)</li>
- *   <li>서류 업로드 완료 (PENDING_REVIEW)</li>
- *   <li>관리자 심사 시작 (UNDER_REVIEW)</li>
- *   <li>서류 승인 후 입금 대기 (PENDING_PAYMENT)</li>
- *   <li>입금 확인 및 최종 승인 (APPROVED)</li>
- * </ol>
- *
- * @since 1.0
+ * 정회원 신청서 엔티티
+ * Membership application entity
  */
 @Entity
 @Table(name = "membership_applications")
@@ -35,160 +37,221 @@ public class MembershipApplication extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 신청자 ID (User 테이블 참조)
-     */
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    /**
-     * 심사 상태 (CommonCode: VERIFICATION_STATUS)
-     * - PENDING_DOCUMENTS: 서류 제출 대기
-     * - PENDING_REVIEW: 심사 대기
-     * - UNDER_REVIEW: 심사 중
-     * - PENDING_PAYMENT: 입금 대기
-     * - APPROVED: 승인 완료
-     * - REJECTED: 반려
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_code_id", nullable = false)
-    private CommonCode status;
+    // 신청 정보
+    @Column(name = "application_number", nullable = false, unique = true, length = 20)
+    private String applicationNumber;  // 예: APP-2025-0001
 
-    /**
-     * 신청자 실명
-     * User 테이블의 realName과 일치해야 함
-     */
-    @Column(name = "real_name", nullable = false, length = 50)
-    private String realName;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private ApplicationStatus status = ApplicationStatus.DOCUMENT_PENDING;
 
-    /**
-     * 신청자 전화번호
-     * User 테이블의 phoneNumber와 일치해야 함
-     */
-    @Column(name = "phone_number", nullable = false, length = 20)
-    private String phoneNumber;
+    // 차량 소유 유형
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vehicle_ownership_type", nullable = false, length = 30)
+    private VehicleOwnershipType vehicleOwnershipType;
 
-    /**
-     * 차량 번호
-     * 예: 12가3456
-     */
+    // 신청자 정보 (신청 당시 스냅샷)
+    @Column(name = "applicant_name", nullable = false, length = 50)
+    private String applicantName;
+
+    @Column(name = "applicant_phone", nullable = false, length = 20)
+    private String applicantPhone;
+
+    @Column(name = "applicant_email", length = 255)
+    private String applicantEmail;
+
+    // 차량 정보 (최초 등록 차량)
     @Column(name = "car_number", nullable = false, length = 20)
     private String carNumber;
 
-    /**
-     * 차대번호 (VIN)
-     * 차량 고유 식별 번호
-     */
     @Column(name = "vin_number", nullable = false, length = 50)
     private String vinNumber;
 
-    /**
-     * 차량 소유 형태 (CommonCode: VEHICLE_OWNERSHIP_TYPE)
-     * - PERSONAL: 개인
-     * - CORPORATE: 법인
-     * - LEASE: 리스
-     * - RENTAL: 렌트
-     * - CORPORATE_LEASE: 법인 리스
-     * - CORPORATE_RENTAL: 법인 렌트
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ownership_type_code_id", nullable = false)
-    private CommonCode ownershipType;
+    @Column(name = "car_model", nullable = false, length = 100)
+    private String carModel;
 
-    /**
-     * 반려 사유
-     * 심사 반려 시 관리자가 작성
-     */
-    @Column(name = "rejection_reason", length = 500)
-    private String rejectionReason;
+    // 처리 정보
+    @Column(name = "reviewed_by")
+    private Long reviewedBy;  // 검토한 관리자 ID
 
-    /**
-     * 심사자 ID (User 테이블 참조)
-     * 신청서를 승인/반려한 관리자
-     */
-    @Column(name = "reviewed_by_admin_id")
-    private Long reviewedByAdminId;
-
-    /**
-     * 심사 완료 일시
-     * 승인 또는 반려된 시각
-     */
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
 
-    // === 생성자 ===
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
 
-    /**
-     * 정회원 신청서 생성
-     *
-     * @param userId 신청자 ID
-     * @param initialStatus 초기 상태 (PENDING_DOCUMENTS)
-     * @param realName 실명
-     * @param phoneNumber 전화번호
-     * @param carNumber 차량 번호
-     * @param vinNumber 차대번호
-     * @param ownershipType 차량 소유 형태
-     */
-    public MembershipApplication(
-            Long userId,
-            CommonCode initialStatus,
-            String realName,
-            String phoneNumber,
-            String carNumber,
-            String vinNumber,
-            CommonCode ownershipType
-    ) {
+    // 결제 정보
+    @Column(name = "payment_amount", precision = 10, scale = 2)
+    private BigDecimal paymentAmount;  // 결제 금액 (입회비 + 연회비)
+
+    @Column(name = "target_year")
+    private Integer targetYear;  // 연회비 대상 년도
+
+    // 완료 정보
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "assigned_member_number")
+    private Integer assignedMemberNumber;  // 부여된 정회원 번호
+
+    // 제출 서류 (One-to-Many)
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationDocument> documents = new ArrayList<>();
+
+    @Builder
+    public MembershipApplication(Long userId, String applicationNumber,
+                                  VehicleOwnershipType vehicleOwnershipType,
+                                  String applicantName, String applicantPhone, String applicantEmail,
+                                  String carNumber, String vinNumber, String carModel) {
         this.userId = userId;
-        this.status = initialStatus;
-        this.realName = realName;
-        this.phoneNumber = phoneNumber;
+        this.applicationNumber = applicationNumber;
+        this.vehicleOwnershipType = vehicleOwnershipType;
+        this.applicantName = applicantName;
+        this.applicantPhone = applicantPhone;
+        this.applicantEmail = applicantEmail;
         this.carNumber = carNumber;
         this.vinNumber = vinNumber;
-        this.ownershipType = ownershipType;
+        this.carModel = carModel;
+        this.status = ApplicationStatus.DOCUMENT_PENDING;
     }
 
-    // === 비즈니스 메서드 ===
-
     /**
-     * 심사 상태 변경
-     *
-     * @param newStatus 새로운 상태
+     * 신청 상태 변경
+     * Change application status
      */
-    public void updateStatus(CommonCode newStatus) {
+    public void changeStatus(ApplicationStatus newStatus) {
         this.status = newStatus;
     }
 
     /**
-     * 신청 승인
-     *
-     * @param adminId 승인한 관리자 ID
+     * 서류 제출 완료로 변경
+     * Mark documents as submitted
+     */
+    public void markDocumentsSubmitted() {
+        this.status = ApplicationStatus.DOCUMENT_SUBMITTED;
+    }
+
+    /**
+     * 서류 검토 시작
+     * Start document review
+     */
+    public void startReview(Long reviewerId) {
+        this.status = ApplicationStatus.UNDER_REVIEW;
+        this.reviewedBy = reviewerId;
+        this.reviewedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 서류 승인
+     * Approve documents
+     */
+    public void approveDocuments() {
+        this.status = ApplicationStatus.DOCUMENT_APPROVED;
+    }
+
+    /**
+     * 서류 반려
+     * Reject documents
+     */
+    public void rejectDocuments(String reason) {
+        this.status = ApplicationStatus.DOCUMENT_REJECTED;
+        this.rejectionReason = reason;
+    }
+
+    /**
+     * 신청서 승인 (서류 승인 후 결제 대기로 전환)
+     * Approve application (approve documents and move to payment pending)
      */
     public void approve(Long adminId) {
-        this.reviewedByAdminId = adminId;
+        this.reviewedBy = adminId;
         this.reviewedAt = LocalDateTime.now();
-        // status는 별도로 updateStatus()로 변경
+        this.status = ApplicationStatus.DOCUMENT_APPROVED;
     }
 
     /**
-     * 신청 반려
-     *
-     * @param reason 반려 사유
-     * @param adminId 반려한 관리자 ID
+     * 신청서 반려
+     * Reject application
      */
     public void reject(String reason, Long adminId) {
-        this.rejectionReason = reason;
-        this.reviewedByAdminId = adminId;
+        this.reviewedBy = adminId;
         this.reviewedAt = LocalDateTime.now();
-        // status는 별도로 updateStatus()로 변경
+        this.rejectionReason = reason;
+        this.status = ApplicationStatus.DOCUMENT_REJECTED;
     }
 
     /**
-     * 차량 소유 형태 변경
-     * 서류 제출 전에만 가능
-     *
-     * @param newOwnershipType 새로운 소유 형태
+     * 결제 대기 상태로 변경
+     * Change status to payment pending
      */
-    public void updateOwnershipType(CommonCode newOwnershipType) {
-        this.ownershipType = newOwnershipType;
+    public void markPaymentPending(BigDecimal amount, Integer year) {
+        this.status = ApplicationStatus.PAYMENT_PENDING;
+        this.paymentAmount = amount;
+        this.targetYear = year;
+    }
+
+    /**
+     * 결제 확인 완료
+     * Confirm payment
+     */
+    public void confirmPayment() {
+        this.status = ApplicationStatus.PAYMENT_CONFIRMED;
+    }
+
+    /**
+     * 신청 완료 및 정회원 전환
+     * Complete application and convert to regular member
+     */
+    public void complete(Integer memberNumber) {
+        this.status = ApplicationStatus.COMPLETED;
+        this.approvedAt = LocalDateTime.now();
+        this.assignedMemberNumber = memberNumber;
+    }
+
+    /**
+     * 신청 취소
+     * Cancel application
+     */
+    public void cancel(String reason) {
+        this.status = ApplicationStatus.CANCELLED;
+        this.rejectionReason = reason;
+    }
+
+    /**
+     * 서류 추가
+     * Add document
+     */
+    public void addDocument(ApplicationDocument document) {
+        documents.add(document);
+        document.setApplication(this);
+    }
+
+    /**
+     * 서류 제출 완료 여부 확인
+     * Check if all required documents are submitted
+     */
+    public boolean areAllDocumentsSubmitted() {
+        if (documents.isEmpty()) {
+            return false;
+        }
+
+        // 차량 소유 유형별 필수 서류 개수 확인
+        int requiredDocCount = getRequiredDocumentCount();
+        return documents.size() >= requiredDocCount;
+    }
+
+    /**
+     * 필수 서류 개수 반환
+     * Get required document count based on ownership type
+     */
+    private int getRequiredDocumentCount() {
+        return switch (vehicleOwnershipType) {
+            case PERSONAL -> 2;  // 차량등록증 + 신분증
+            case CORPORATE -> 3;  // 차량등록증 + 신분증 + 사업자등록증
+            case LEASE, RENTAL -> 3;  // 차량등록증 + 신분증 + 계약서
+            case CORPORATE_LEASE, CORPORATE_RENTAL -> 4;  // 차량등록증 + 신분증 + 사업자등록증 + 계약서
+        };
     }
 }

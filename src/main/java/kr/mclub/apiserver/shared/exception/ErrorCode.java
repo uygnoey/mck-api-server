@@ -1,8 +1,9 @@
 package kr.mclub.apiserver.shared.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 /**
  * 에러 코드 정의
@@ -31,6 +32,11 @@ public enum ErrorCode {
     PASSWORD_NOT_SET(HttpStatus.BAD_REQUEST, "A009", "비밀번호가 설정되지 않았습니다."),
     USER_WITHDRAWN(HttpStatus.FORBIDDEN, "A010", "탈퇴한 사용자입니다."),
     USER_INACTIVE(HttpStatus.FORBIDDEN, "A011", "비활성화된 계정입니다."),
+    OAUTH_TOKEN_EXCHANGE_FAILED(HttpStatus.BAD_REQUEST, "A012", "OAuth 토큰 교환에 실패했습니다."),
+    OAUTH_USER_INFO_FAILED(HttpStatus.BAD_REQUEST, "A013", "OAuth 사용자 정보 조회에 실패했습니다."),
+    OAUTH_CONFIG_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "A014", "OAuth 설정을 찾을 수 없습니다."),
+    OAUTH_PROVIDER_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "A015", "지원하지 않는 OAuth 제공자입니다."),
+    NOT_IMPLEMENTED(HttpStatus.NOT_IMPLEMENTED, "A016", "아직 구현되지 않은 기능입니다."),
 
     // User Errors (사용자 에러)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다."),
@@ -53,12 +59,23 @@ public enum ErrorCode {
     INVALID_APPLICATION_STATUS(HttpStatus.BAD_REQUEST, "M005", "유효하지 않은 신청 상태입니다."),
     OCR_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "M006", "서류 검증에 실패했습니다."),
     DUPLICATE_VIN_NUMBER(HttpStatus.CONFLICT, "M007", "이미 등록된 차대번호입니다."),
+    DOCUMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "M008", "이미 등록된 서류입니다."),
+    DOCUMENT_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "M009", "이미 검증된 서류입니다."),
+    OCR_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "M010", "OCR 결과를 찾을 수 없습니다."),
+    OCR_SERVICE_NOT_AVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "M011", "OCR 서비스를 사용할 수 없습니다."),
+    OCR_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "M012", "OCR이 지원되지 않는 서류 유형입니다."),
+    ANNUAL_FEE_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "M013", "연회비 설정을 찾을 수 없습니다."),
+    ANNUAL_FEE_CONFIG_ALREADY_EXISTS(HttpStatus.CONFLICT, "M014", "연회비 설정이 이미 존재합니다."),
+    MEMBERSHIP_PERIOD_NOT_FOUND(HttpStatus.NOT_FOUND, "M015", "멤버십 기간을 찾을 수 없습니다."),
+    MEMBERSHIP_ALREADY_RENEWED(HttpStatus.CONFLICT, "M016", "이미 갱신된 멤버십입니다."),
 
     // Payment Errors (결제 에러)
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "결제 정보를 찾을 수 없습니다."),
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "P002", "결제 금액이 일치하지 않습니다."),
     PAYMENT_ALREADY_CONFIRMED(HttpStatus.CONFLICT, "P003", "이미 확인된 결제입니다."),
     MEMBERSHIP_EXPIRED(HttpStatus.PAYMENT_REQUIRED, "P004", "멤버십이 만료되었습니다."),
+    INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "P005", "유효하지 않은 결제 상태입니다."),
+    INVALID_REFUND_AMOUNT(HttpStatus.BAD_REQUEST, "P006", "유효하지 않은 환불 금액입니다."),
 
     // Vehicle Errors (차량 에러)
     VEHICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "V001", "차량을 찾을 수 없습니다."),

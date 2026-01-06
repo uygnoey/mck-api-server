@@ -1,14 +1,21 @@
 package kr.mclub.apiserver.user.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
-import kr.mclub.apiserver.shared.domain.CommonCode;
+import java.time.LocalDate;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
 
 /**
  * 회원 차량
@@ -27,25 +34,25 @@ public class MemberVehicle extends BaseTimeEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "license_plate", nullable = false, length = 20)
-    private String licensePlate;  // 차량번호
+    @Column(name = "car_number", nullable = false, length = 20)
+    private String carNumber;  // 차량번호
 
     @Column(name = "vin_number", nullable = false, unique = true, length = 50)
     private String vinNumber;  // 차대번호 (중복 불가)
 
-    @Column(name = "model_name", nullable = false, length = 100)
-    private String modelName;  // 차종 (예: M3, M4, M5 등)
+    @Column(name = "car_model", nullable = false, length = 100)
+    private String carModel;  // 차종 (예: M3, M4, M5 등)
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ownership_type_code_id", nullable = false)
-    private CommonCode ownershipType;  // 소유 유형 (CommonCode)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ownership_type", nullable = false, length = 30)
+    private VehicleOwnershipType ownershipType;  // 소유 유형
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_code_id", nullable = false)
-    private CommonCode status;  // 상태 (CommonCode)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private VehicleStatus status = VehicleStatus.ACTIVE;  // 상태
 
     @Column(name = "registered_at", nullable = false)
-    private LocalDate registeredAt;  // 등록일
+    private LocalDate registeredAt = LocalDate.now();  // 등록일
 
     @Column(name = "sold_at")
     private LocalDate soldAt;  // 매각일
@@ -57,14 +64,14 @@ public class MemberVehicle extends BaseTimeEntity {
     private boolean isPrimary = false;  // 대표 차량 여부
 
     @Builder
-    public MemberVehicle(Long userId, String licensePlate, String vinNumber, String modelName,
-                         CommonCode ownershipType, CommonCode status, LocalDate registeredAt) {
+    public MemberVehicle(Long userId, String carNumber, String vinNumber, String carModel,
+                         VehicleOwnershipType ownershipType, VehicleStatus status, LocalDate registeredAt) {
         this.userId = userId;
-        this.licensePlate = licensePlate;
+        this.carNumber = carNumber;
         this.vinNumber = vinNumber;
-        this.modelName = modelName;
+        this.carModel = carModel;
         this.ownershipType = ownershipType;
-        this.status = status;
+        this.status = status != null ? status : VehicleStatus.ACTIVE;
         this.registeredAt = registeredAt != null ? registeredAt : LocalDate.now();
     }
 
@@ -88,9 +95,9 @@ public class MemberVehicle extends BaseTimeEntity {
      * 차량 매각 처리 (6개월 유예 기간)
      * Mark vehicle as sold with 6-month grace period
      */
-    public void markAsSold(LocalDate soldAt, CommonCode gracePeriodStatus) {
+    public void markAsSold(LocalDate soldAt) {
         this.soldAt = soldAt;
-        this.status = gracePeriodStatus;
+        this.status = VehicleStatus.GRACE_PERIOD;
         this.gracePeriodEndAt = soldAt.plusMonths(6);
         this.isPrimary = false;
     }
@@ -100,7 +107,7 @@ public class MemberVehicle extends BaseTimeEntity {
      * Check if grace period is expired
      */
     public boolean isGracePeriodExpired() {
-        if (status == null || !"GRACE_PERIOD".equals(status.getCode())) {
+        if (status != VehicleStatus.GRACE_PERIOD) {
             return false;
         }
         return gracePeriodEndAt != null && gracePeriodEndAt.isBefore(LocalDate.now());
@@ -110,16 +117,16 @@ public class MemberVehicle extends BaseTimeEntity {
      * 차량 정보 업데이트
      * Update vehicle information
      */
-    public void updateInfo(String licensePlate, String modelName) {
-        this.licensePlate = licensePlate;
-        this.modelName = modelName;
+    public void updateInfo(String carNumber, String carModel) {
+        this.carNumber = carNumber;
+        this.carModel = carModel;
     }
 
     /**
      * 차량 상태 변경
      * Change vehicle status
      */
-    public void changeStatus(CommonCode newStatus) {
+    public void changeStatus(VehicleStatus newStatus) {
         this.status = newStatus;
     }
 }

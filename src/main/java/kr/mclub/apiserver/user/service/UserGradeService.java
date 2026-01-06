@@ -1,20 +1,26 @@
 package kr.mclub.apiserver.user.service;
 
-import kr.mclub.apiserver.shared.exception.BusinessException;
-import kr.mclub.apiserver.shared.exception.ErrorCode;
-import kr.mclub.apiserver.user.domain.UserGrade;
-import kr.mclub.apiserver.user.repository.UserGradeRepository;
-import kr.mclub.apiserver.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import kr.mclub.apiserver.shared.exception.BusinessException;
+import kr.mclub.apiserver.shared.exception.ErrorCode;
+import kr.mclub.apiserver.user.api.dto.UserGradeCreateRequest;
+import kr.mclub.apiserver.user.api.dto.UserGradeUpdateRequest;
+import kr.mclub.apiserver.user.domain.UserGrade;
+import kr.mclub.apiserver.user.repository.UserGradeRepository;
+import kr.mclub.apiserver.user.repository.UserRepository;
 
 /**
  * 사용자 등급 서비스
  * User grade service
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -61,59 +67,77 @@ public class UserGradeService {
     /**
      * 등급 생성
      * Create new grade
+     *
+     * @param request 등급 생성 요청 DTO
+     * @param creatorId 생성자 ID
+     * @return 생성된 등급
      */
     @Transactional
-    public UserGrade createGrade(String code, String name, String roleName,
-                                 Integer permissionLevel, boolean isExecutive, boolean isStaff,
-                                 boolean isMember, boolean requiresAnnualFee,
-                                 String displaySuffix, Integer displayOrder, Long creatorId) {
+    public UserGrade createGrade(UserGradeCreateRequest request, Long creatorId) {
 
         // 코드 중복 체크
-        if (userGradeRepository.existsByCode(code)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_GRADE_CODE, code);
+        if (userGradeRepository.existsByCode(request.code())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_GRADE_CODE, request.code());
         }
 
         // Role 이름 중복 체크
-        String roleNameToUse = roleName != null ? roleName : "ROLE_" + code;
+        String roleNameToUse = request.roleName() != null ? request.roleName() : "ROLE_" + request.code();
         if (userGradeRepository.existsByRoleName(roleNameToUse)) {
             throw new BusinessException(ErrorCode.DUPLICATE_GRADE_CODE, roleNameToUse);
         }
 
         UserGrade grade = UserGrade.builder()
-                .code(code)
-                .name(name)
+                .code(request.code())
+                .name(request.name())
                 .roleName(roleNameToUse)
-                .permissionLevel(permissionLevel)
-                .isExecutive(isExecutive)
-                .isStaff(isStaff)
-                .isMember(isMember)
-                .requiresAnnualFee(requiresAnnualFee)
+                .permissionLevel(request.permissionLevel())
+                .isExecutive(request.isExecutive())
+                .isStaff(request.isStaff())
+                .isMember(request.isMember())
+                .requiresAnnualFee(request.requiresAnnualFee())
                 .isSystemGrade(false)  // 사용자가 만든 등급은 시스템 등급이 아님
-                .displaySuffix(displaySuffix)
-                .displayOrder(displayOrder)
+                .displaySuffix(request.displaySuffix())
+                .displayOrder(request.displayOrder())
                 .createdBy(creatorId)
                 .build();
 
-        return userGradeRepository.save(grade);
+        UserGrade savedGrade = userGradeRepository.save(grade);
+        log.info("New user grade created: code={}, name={}, createdBy={}",
+                request.code(), request.name(), creatorId);
+
+        return savedGrade;
     }
 
     /**
      * 등급 수정
      * Update grade
+     *
+     * @param gradeId 등급 ID
+     * @param request 등급 수정 요청 DTO
+     * @return 수정된 등급
      */
     @Transactional
-    public UserGrade updateGrade(Long gradeId, String name, Integer permissionLevel,
-                                 boolean isExecutive, boolean isStaff,
-                                 String displaySuffix, Integer displayOrder) {
+    public UserGrade updateGrade(Long gradeId, UserGradeUpdateRequest request) {
 
         UserGrade grade = getGradeById(gradeId);
-        grade.update(name, permissionLevel, isExecutive, isStaff, displaySuffix, displayOrder);
+        grade.update(
+                request.name(),
+                request.permissionLevel(),
+                request.isExecutive(),
+                request.isStaff(),
+                request.displaySuffix(),
+                request.displayOrder()
+        );
+
+        log.info("User grade updated: gradeId={}, name={}", gradeId, request.name());
         return grade;
     }
 
     /**
      * 등급 삭제
      * Delete grade (soft delete by deactivation)
+     *
+     * @param gradeId 등급 ID
      */
     @Transactional
     public void deleteGrade(Long gradeId) {
@@ -130,6 +154,7 @@ public class UserGradeService {
         }
 
         grade.deactivate();
+        log.info("User grade deleted (deactivated): gradeId={}, code={}", gradeId, grade.getCode());
     }
 
     /**

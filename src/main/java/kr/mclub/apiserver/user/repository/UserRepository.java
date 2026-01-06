@@ -1,14 +1,15 @@
 package kr.mclub.apiserver.user.repository;
 
-import kr.mclub.apiserver.user.domain.User;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Optional;
+import kr.mclub.apiserver.user.domain.User;
 
 /**
  * 사용자 Repository
@@ -26,7 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 정회원 번호로 조회
      * Find by member number
      */
-    Optional<User> findByMemberNumber(Integer memberNumber);
+    @Query("SELECT u FROM User u JOIN FETCH u.grade WHERE u.memberNumber = :memberNumber")
+    Optional<User> findByMemberNumber(@Param("memberNumber") Integer memberNumber);
 
     /**
      * 전화번호로 조회
@@ -109,9 +111,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Integer getNextMemberNumber();
 
     /**
-     * 탈퇴하지 않은 사용자 조회
-     * Find by ID excluding withdrawn users
+     * 탈퇴하지 않은 사용자 조회 (등급 정보 포함)
+     * Find by ID excluding withdrawn users (with grade)
      */
-    @Query("SELECT u FROM User u WHERE u.id = :id AND u.isWithdrawn = false")
+    @Query("SELECT u FROM User u JOIN FETCH u.grade WHERE u.id = :id AND u.isWithdrawn = false")
     Optional<User> findByIdAndNotWithdrawn(@Param("id") Long id);
 }

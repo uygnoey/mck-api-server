@@ -1,30 +1,28 @@
 package kr.mclub.apiserver.membership.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import java.util.Map;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 /**
- * 이사 파트 / Director Part
- *
- * <p>이사진이 담당하는 파트(부서) 정보를 관리합니다.</p>
- *
- * <h3>이사 파트 예시</h3>
- * <ul>
- *   <li>총무 - 회비 관리, 회원 관리</li>
- *   <li>행사 - 정기/비정기 모임 기획 및 운영</li>
- *   <li>홍보 - SNS 운영, 대외 협력</li>
- *   <li>기술 - 웹사이트 운영, 시스템 관리</li>
- * </ul>
- *
- * @since 1.0
+ * 이사 파트 엔티티
+ * Director part entity
  */
 @Entity
-@Table(name = "director_parts", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_director_part_name", columnNames = {"part_name"})
-})
+@Table(name = "director_parts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DirectorPart extends BaseTimeEntity {
@@ -33,88 +31,96 @@ public class DirectorPart extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 파트명
-     * 예: 총무, 행사, 홍보, 기술
-     */
-    @Column(name = "part_name", nullable = false, unique = true, length = 50)
-    private String partName;
+    // 파트 정보
+    @Column(nullable = false, unique = true, length = 50)
+    private String name;  // 파트명 (예: 행사, 홍보, 총무)
 
-    /**
-     * 파트 설명
-     * 담당 업무 설명
-     */
-    @Column(name = "description", length = 500)
+    @Column(length = 200)
     private String description;
 
-    /**
-     * 정렬 순서
-     * 화면 표시 시 사용
-     */
     @Column(name = "display_order", nullable = false)
-    private Integer displayOrder;
+    private Integer displayOrder = 0;  // 표시 순서
 
-    /**
-     * 활성 여부
-     * false면 폐지된 파트
-     */
+    // 권한 설정
+    @Column(name = "can_manage_members", nullable = false)
+    private boolean canManageMembers = false;  // 회원 관리 권한
+
+    @Column(name = "can_manage_posts", nullable = false)
+    private boolean canManagePosts = true;  // 게시글 관리 권한
+
+    @Column(name = "can_manage_events", nullable = false)
+    private boolean canManageEvents = false;  // 이벤트 관리 권한
+
+    @Column(name = "can_assign_sub_permissions", nullable = false)
+    private boolean canAssignSubPermissions = false;  // 세부 권한 지정 가능
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "custom_permissions", columnDefinition = "jsonb")
+    private Map<String, Object> customPermissions;  // 추가 커스텀 권한 (JSON)
+
+    // 관리
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;  // 생성자 (회장 ID)
+
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+    private boolean isActive = true;
 
-    /**
-     * 생성한 관리자 ID (User 테이블 참조)
-     * 회장만 파트 생성/수정/삭제 가능
-     */
-    @Column(name = "created_by_admin_id", nullable = false)
-    private Long createdByAdminId;
-
-    // === 생성자 ===
-
-    /**
-     * 이사 파트 생성
-     *
-     * @param partName 파트명
-     * @param description 파트 설명
-     * @param displayOrder 정렬 순서
-     * @param createdByAdminId 생성한 관리자 ID
-     */
-    public DirectorPart(
-            String partName,
-            String description,
-            Integer displayOrder,
-            Long createdByAdminId
-    ) {
-        this.partName = partName;
+    @Builder
+    public DirectorPart(String name, String description, Integer displayOrder, Long createdBy) {
+        this.name = name;
         this.description = description;
-        this.displayOrder = displayOrder;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
+        this.createdBy = createdBy;
+        this.canManageMembers = false;
+        this.canManagePosts = true;
+        this.canManageEvents = false;
+        this.canAssignSubPermissions = false;
         this.isActive = true;
-        this.createdByAdminId = createdByAdminId;
     }
 
-    // === 비즈니스 메서드 ===
-
     /**
-     * 파트 정보 수정
-     *
-     * @param partName 파트명
-     * @param description 파트 설명
-     * @param displayOrder 정렬 순서
+     * 파트 정보 업데이트
+     * Update part information
      */
-    public void update(String partName, String description, Integer displayOrder) {
-        this.partName = partName;
+    public void update(String name, String description, Integer displayOrder) {
+        this.name = name;
         this.description = description;
-        this.displayOrder = displayOrder;
+        if (displayOrder != null) {
+            this.displayOrder = displayOrder;
+        }
     }
 
     /**
-     * 파트 비활성화 (폐지)
+     * 권한 설정
+     * Set permissions
+     */
+    public void setPermissions(boolean canManageMembers, boolean canManagePosts,
+                                boolean canManageEvents, boolean canAssignSubPermissions) {
+        this.canManageMembers = canManageMembers;
+        this.canManagePosts = canManagePosts;
+        this.canManageEvents = canManageEvents;
+        this.canAssignSubPermissions = canAssignSubPermissions;
+    }
+
+    /**
+     * 커스텀 권한 설정
+     * Set custom permissions
+     */
+    public void setCustomPermissions(Map<String, Object> permissions) {
+        this.customPermissions = permissions;
+    }
+
+    /**
+     * 파트 비활성화
+     * Deactivate part
      */
     public void deactivate() {
         this.isActive = false;
     }
 
     /**
-     * 파트 활성화 (재개설)
+     * 파트 활성화
+     * Activate part
      */
     public void activate() {
         this.isActive = true;

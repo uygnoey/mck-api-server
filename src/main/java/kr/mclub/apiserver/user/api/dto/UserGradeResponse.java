@@ -10,6 +10,7 @@ public record UserGradeResponse(
         Long id,
         String code,
         String name,
+        String roleName,
         Integer permissionLevel,
         boolean isExecutive,
         boolean isStaff,
@@ -17,7 +18,8 @@ public record UserGradeResponse(
         boolean requiresAnnualFee,
         boolean isSystemGrade,
         String displaySuffix,
-        Integer displayOrder
+        Integer displayOrder,
+        boolean isActive
 ) {
     /**
      * UserGrade 엔티티에서 변환
@@ -28,6 +30,7 @@ public record UserGradeResponse(
                 grade.getId(),
                 grade.getCode(),
                 grade.getName(),
+                grade.getRoleName(),
                 grade.getPermissionLevel(),
                 grade.isExecutive(),
                 grade.isStaff(),
@@ -35,7 +38,8 @@ public record UserGradeResponse(
                 grade.isRequiresAnnualFee(),
                 grade.isSystemGrade(),
                 grade.getDisplaySuffix(),
-                grade.getDisplayOrder()
+                grade.getDisplayOrder(),
+                grade.isActive()
         );
     }
 }

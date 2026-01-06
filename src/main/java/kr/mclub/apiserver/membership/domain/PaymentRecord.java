@@ -1,35 +1,27 @@
 package kr.mclub.apiserver.membership.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
-import kr.mclub.apiserver.shared.domain.CommonCode;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
 
 /**
- * 입금 기록 / Payment Record
- *
- * <p>가입비 및 연회비 입금 내역을 관리합니다.</p>
- *
- * <h3>결제 유형 (PaymentType)</h3>
- * <ul>
- *   <li>ENROLLMENT_FEE - 가입비 (최초 1회, 기본 200,000원)</li>
- *   <li>ANNUAL_FEE - 연회비 (매년 갱신, 기본 200,000원)</li>
- * </ul>
- *
- * <h3>결제 상태 (PaymentStatus)</h3>
- * <ul>
- *   <li>PENDING - 입금 대기</li>
- *   <li>CONFIRMED - 입금 확인 완료</li>
- *   <li>CANCELLED - 취소됨 (환불 등)</li>
- * </ul>
- *
- * @since 1.0
+ * 결제 기록 엔티티
+ * Payment record entity
  */
 @Entity
 @Table(name = "payment_records")
@@ -41,176 +33,132 @@ public class PaymentRecord extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 납부자 ID (User 테이블 참조)
-     */
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    /**
-     * 결제 유형 (CommonCode: PAYMENT_TYPE)
-     * - ENROLLMENT_FEE: 가입비
-     * - ANNUAL_FEE: 연회비
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_type_code_id", nullable = false)
-    private CommonCode paymentType;
+    @Column(name = "application_id")
+    private Long applicationId;  // 정회원 신청 ID (nullable, 연회비는 null)
 
-    /**
-     * 납부 금액 (원)
-     */
-    @Column(nullable = false, precision = 10, scale = 0)
+    // 결제 유형
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type", nullable = false, length = 20)
+    private PaymentType paymentType;
+
+    @Column(name = "target_year", nullable = false)
+    private Integer targetYear;  // 연회비 대상 년도
+
+    // 금액
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    /**
-     * 입금자명
-     * 계좌 이체 시 입금자 이름
-     */
+    // 입금 정보
     @Column(name = "depositor_name", nullable = false, length = 50)
-    private String depositorName;
+    private String depositorName;  // 입금자명
 
-    /**
-     * 입금 일자
-     */
     @Column(name = "deposit_date", nullable = false)
-    private LocalDate depositDate;
+    private LocalDate depositDate;  // 입금일
 
-    /**
-     * 결제 상태 (CommonCode: PAYMENT_STATUS)
-     * - PENDING: 입금 대기
-     * - CONFIRMED: 입금 확인 완료
-     * - CANCELLED: 취소됨
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_status_code_id", nullable = false)
-    private CommonCode status;
+    // 상태
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PaymentStatus status = PaymentStatus.PENDING;
 
-    /**
-     * 확인한 관리자 ID (User 테이블 참조)
-     * 입금을 확인한 관리자
-     */
-    @Column(name = "confirmed_by_admin_id")
-    private Long confirmedByAdminId;
+    // 확인 정보
+    @Column(name = "confirmed_by")
+    private Long confirmedBy;  // 확인한 관리자 ID
 
-    /**
-     * 확인 일시
-     * 입금이 확인된 시각
-     */
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
-    /**
-     * 자동 확인 여부
-     * true: 오픈뱅킹 API로 자동 확인
-     * false: 관리자가 수동 확인
-     */
     @Column(name = "auto_confirmed", nullable = false)
-    private Boolean autoConfirmed;
+    private boolean autoConfirmed = false;  // 오픈뱅킹 자동 확인 여부
 
-    /**
-     * 은행 거래 ID
-     * 오픈뱅킹 API 사용 시 거래 고유 번호
-     */
+    // 오픈뱅킹 연동
     @Column(name = "bank_transaction_id", length = 100)
-    private String bankTransactionId;
+    private String bankTransactionId;  // 은행 거래 ID
 
-    /**
-     * 연회비 대상 연도
-     * 연회비인 경우에만 사용
-     * 예: 2025년 연회비 → 2025
-     */
-    @Column(name = "target_year")
-    private Integer targetYear;
+    @Column(name = "bank_account_number", length = 50)
+    private String bankAccountNumber;  // 입금 계좌번호 (마스킹)
 
-    // === 생성자 ===
+    // 취소/환불 정보
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
 
-    /**
-     * 입금 기록 생성 (수동 등록)
-     *
-     * @param userId 납부자 ID
-     * @param paymentType 결제 유형
-     * @param amount 납부 금액
-     * @param depositorName 입금자명
-     * @param depositDate 입금 일자
-     * @param initialStatus 초기 상태 (PENDING)
-     */
-    public PaymentRecord(
-            Long userId,
-            CommonCode paymentType,
-            BigDecimal amount,
-            String depositorName,
-            LocalDate depositDate,
-            CommonCode initialStatus
-    ) {
+    @Column(name = "cancelled_by")
+    private Long cancelledBy;
+
+    @Column(name = "cancellation_reason", length = 500)
+    private String cancellationReason;
+
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+
+    @Column(name = "refund_amount", precision = 10, scale = 2)
+    private BigDecimal refundAmount;
+
+    @Builder
+    public PaymentRecord(Long userId, Long applicationId, PaymentType paymentType,
+                         Integer targetYear, BigDecimal amount,
+                         String depositorName, LocalDate depositDate) {
         this.userId = userId;
+        this.applicationId = applicationId;
         this.paymentType = paymentType;
+        this.targetYear = targetYear;
         this.amount = amount;
         this.depositorName = depositorName;
         this.depositDate = depositDate;
-        this.status = initialStatus;
+        this.status = PaymentStatus.PENDING;
         this.autoConfirmed = false;
     }
 
     /**
-     * 입금 기록 생성 (오픈뱅킹 자동 확인)
-     *
-     * @param userId 납부자 ID
-     * @param paymentType 결제 유형
-     * @param amount 납부 금액
-     * @param depositorName 입금자명
-     * @param depositDate 입금 일자
-     * @param confirmedStatus 확인 완료 상태 (CONFIRMED)
-     * @param bankTransactionId 은행 거래 ID
+     * 결제 확인 (관리자)
+     * Confirm payment by admin
      */
-    public PaymentRecord(
-            Long userId,
-            CommonCode paymentType,
-            BigDecimal amount,
-            String depositorName,
-            LocalDate depositDate,
-            CommonCode confirmedStatus,
-            String bankTransactionId
-    ) {
-        this.userId = userId;
-        this.paymentType = paymentType;
-        this.amount = amount;
-        this.depositorName = depositorName;
-        this.depositDate = depositDate;
-        this.status = confirmedStatus;
+    public void confirm(Long adminId) {
+        this.status = PaymentStatus.CONFIRMED;
+        this.confirmedBy = adminId;
+        this.confirmedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 결제 자동 확인 (오픈뱅킹)
+     * Auto-confirm payment via open banking
+     */
+    public void autoConfirm(String bankTransactionId, String bankAccountNumber) {
+        this.status = PaymentStatus.CONFIRMED;
+        this.confirmedAt = LocalDateTime.now();
         this.autoConfirmed = true;
         this.bankTransactionId = bankTransactionId;
-        this.confirmedAt = LocalDateTime.now();
-    }
-
-    // === 비즈니스 메서드 ===
-
-    /**
-     * 입금 확인 (관리자 수동 확인)
-     *
-     * @param adminId 확인한 관리자 ID
-     * @param confirmedStatus 확인 완료 상태 (CONFIRMED)
-     */
-    public void confirm(Long adminId, CommonCode confirmedStatus) {
-        this.status = confirmedStatus;
-        this.confirmedByAdminId = adminId;
-        this.confirmedAt = LocalDateTime.now();
+        this.bankAccountNumber = bankAccountNumber;
     }
 
     /**
-     * 입금 취소
-     *
-     * @param cancelledStatus 취소 상태 (CANCELLED)
+     * 결제 취소
+     * Cancel payment
      */
-    public void cancel(CommonCode cancelledStatus) {
-        this.status = cancelledStatus;
+    public void cancel(String reason, Long adminId) {
+        this.status = PaymentStatus.CANCELLED;
+        this.cancellationReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+        this.cancelledBy = adminId;
     }
 
     /**
-     * 연회비 대상 연도 설정
-     *
-     * @param year 대상 연도
+     * 환불 처리
+     * Process refund
      */
-    public void setTargetYear(Integer year) {
-        this.targetYear = year;
+    public void refund(BigDecimal refundAmount) {
+        this.status = PaymentStatus.REFUNDED;
+        this.refundAmount = refundAmount;
+        this.refundedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 상태 변경
+     * Change status
+     */
+    public void changeStatus(PaymentStatus newStatus) {
+        this.status = newStatus;
     }
 }

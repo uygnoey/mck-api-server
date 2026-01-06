@@ -1,27 +1,29 @@
 package kr.mclub.apiserver.membership.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
- * OCR 검증 결과 / OCR Result
- *
- * <p>제출된 서류에서 OCR로 추출한 정보 및 검증 결과를 저장합니다.</p>
- *
- * <h3>OCR 처리 대상</h3>
- * <ul>
- *   <li>차량등록증: 차량 번호, 차대번호, 소유자명 추출</li>
- *   <li>신분증: 이름, 생년월일 추출 및 검증</li>
- *   <li>사업자등록증: 사업자번호, 회사명 추출</li>
- * </ul>
- *
- * @since 1.0
+ * OCR 추출 결과 엔티티
+ * OCR result entity
  */
 @Entity
 @Table(name = "ocr_results")
@@ -33,127 +35,87 @@ public class OcrResult extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 서류 ID (ApplicationDocument 테이블 참조)
-     */
     @Column(name = "document_id", nullable = false)
     private Long documentId;
 
-    /**
-     * OCR 처리 성공 여부
-     */
+    // OCR 메타데이터
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ocr_provider", nullable = false, length = 30)
+    private OcrProvider ocrProvider;
+
+    @Column(name = "ocr_version", length = 20)
+    private String ocrVersion;
+
+    @Column(name = "processing_time_ms")
+    private Integer processingTimeMs;
+
+    @Column(name = "confidence_score", precision = 5, scale = 4)
+    private BigDecimal confidenceScore;  // 0.0000 ~ 1.0000
+
     @Column(name = "is_success", nullable = false)
-    private Boolean isSuccess;
+    private boolean isSuccess = true;  // OCR 처리 성공 여부
 
-    /**
-     * OCR 신뢰도 점수 (0.0 ~ 1.0)
-     * 1.0에 가까울수록 높은 신뢰도
-     */
-    @Column(name = "confidence_score", precision = 3, scale = 2)
-    private BigDecimal confidenceScore;
+    // 추출된 데이터 (JSON)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "extracted_data", nullable = false, columnDefinition = "jsonb")
+    private Map<String, Object> extractedData;  // 서류별 추출 결과
 
-    /**
-     * 추출된 텍스트 (JSON 형식)
-     * 예: {"carNumber": "12가3456", "vinNumber": "ABC123", "ownerName": "홍길동"}
-     */
-    @Column(name = "extracted_text", columnDefinition = "TEXT")
-    private String extractedText;
+    @Column(name = "raw_text", columnDefinition = "TEXT")
+    private String rawText;  // 원본 추출 텍스트
 
-    /**
-     * 검증 결과
-     * true: 추출된 정보가 신청서 정보와 일치
-     * false: 불일치 또는 검증 불가
-     */
-    @Column(name = "is_verified", nullable = false)
-    private Boolean isVerified;
+    // 대조 결과
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "match_result", columnDefinition = "jsonb")
+    private Map<String, Object> matchResult;  // 신청 정보와 대조 결과
 
-    /**
-     * 검증 메시지
-     * 검증 실패 사유 또는 추가 정보
-     */
-    @Column(name = "verification_message", length = 500)
-    private String verificationMessage;
+    @Column(name = "is_matched")
+    private Boolean isMatched;  // 전체 대조 성공 여부
 
-    /**
-     * OCR 처리 일시
-     */
-    @Column(name = "processed_at", nullable = false)
-    private LocalDateTime processedAt;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "mismatch_fields", columnDefinition = "text[]")
+    private List<String> mismatchFields;  // 불일치 필드 목록
 
-    /**
-     * 사용한 OCR 엔진
-     * 예: PaddleOCR, Tesseract, Naver Clova OCR
-     */
-    @Column(name = "ocr_engine", length = 50)
-    private String ocrEngine;
-
-    /**
-     * 오류 메시지
-     * OCR 처리 실패 시 오류 내용
-     */
-    @Column(name = "error_message", length = 1000)
-    private String errorMessage;
-
-    // === 생성자 ===
-
-    /**
-     * OCR 결과 생성 (성공)
-     *
-     * @param documentId 서류 ID
-     * @param confidenceScore 신뢰도 점수
-     * @param extractedText 추출된 텍스트 (JSON)
-     * @param isVerified 검증 결과
-     * @param verificationMessage 검증 메시지
-     * @param ocrEngine 사용한 OCR 엔진
-     */
-    public OcrResult(
-            Long documentId,
-            BigDecimal confidenceScore,
-            String extractedText,
-            Boolean isVerified,
-            String verificationMessage,
-            String ocrEngine
-    ) {
+    @Builder
+    public OcrResult(Long documentId, OcrProvider ocrProvider, String ocrVersion,
+                     Integer processingTimeMs, BigDecimal confidenceScore, Boolean isSuccess,
+                     Map<String, Object> extractedData, String rawText) {
         this.documentId = documentId;
-        this.isSuccess = true;
+        this.ocrProvider = ocrProvider;
+        this.ocrVersion = ocrVersion;
+        this.processingTimeMs = processingTimeMs;
         this.confidenceScore = confidenceScore;
-        this.extractedText = extractedText;
-        this.isVerified = isVerified;
-        this.verificationMessage = verificationMessage;
-        this.processedAt = LocalDateTime.now();
-        this.ocrEngine = ocrEngine;
+        this.isSuccess = isSuccess != null ? isSuccess : true;
+        this.extractedData = extractedData;
+        this.rawText = rawText;
     }
 
     /**
-     * OCR 결과 생성 (실패)
-     *
-     * @param documentId 서류 ID
-     * @param errorMessage 오류 메시지
-     * @param ocrEngine 사용한 OCR 엔진
+     * 대조 결과 설정
+     * Set match result
      */
-    public OcrResult(
-            Long documentId,
-            String errorMessage,
-            String ocrEngine
-    ) {
-        this.documentId = documentId;
-        this.isSuccess = false;
-        this.isVerified = false;
-        this.errorMessage = errorMessage;
-        this.processedAt = LocalDateTime.now();
-        this.ocrEngine = ocrEngine;
+    public void setMatchResult(Map<String, Object> matchResult, Boolean isMatched, List<String> mismatchFields) {
+        this.matchResult = matchResult;
+        this.isMatched = isMatched;
+        this.mismatchFields = mismatchFields;
     }
 
-    // === 비즈니스 메서드 ===
+    /**
+     * 대조 성공 여부 업데이트
+     * Update match status
+     */
+    public void updateMatchStatus(Boolean isMatched) {
+        this.isMatched = isMatched;
+    }
 
     /**
-     * 검증 결과 업데이트
-     *
-     * @param isVerified 검증 결과
-     * @param message 검증 메시지
+     * 불일치 필드 추가
+     * Add mismatch field
      */
-    public void updateVerification(Boolean isVerified, String message) {
-        this.isVerified = isVerified;
-        this.verificationMessage = message;
+    public void addMismatchField(String fieldName) {
+        if (this.mismatchFields == null) {
+            this.mismatchFields = new java.util.ArrayList<>();
+        }
+        this.mismatchFields.add(fieldName);
+        this.isMatched = false;
     }
 }

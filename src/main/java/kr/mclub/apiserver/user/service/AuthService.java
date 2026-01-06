@@ -1,18 +1,23 @@
 package kr.mclub.apiserver.user.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import kr.mclub.apiserver.shared.exception.BusinessException;
 import kr.mclub.apiserver.shared.exception.ErrorCode;
 import kr.mclub.apiserver.shared.security.JwtTokenProvider;
 import kr.mclub.apiserver.user.domain.AssociateStatus;
+import kr.mclub.apiserver.user.domain.OAuthProvider;
 import kr.mclub.apiserver.user.domain.User;
 import kr.mclub.apiserver.user.domain.UserGrade;
 import kr.mclub.apiserver.user.event.UserEventPublisher;
+import kr.mclub.apiserver.user.oauth.OAuth2Client;
+import kr.mclub.apiserver.user.oauth.OAuth2ClientFactory;
 import kr.mclub.apiserver.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 인증 서비스 / Authentication Service
@@ -32,6 +37,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserEventPublisher eventPublisher;
+    private final OAuth2UserService oAuth2UserService;
+    private final OAuth2ClientFactory oAuth2ClientFactory;
+    private final UserService userService;
 
     /**
      * 회원가입 / Sign up
@@ -218,5 +226,121 @@ public class AuthService {
             String accessToken,
             String refreshToken,
             User user
+    ) {}
+
+    /**
+     * OAuth 로그인 / OAuth login
+     *
+     * @param provider OAuth 제공자 (google, naver, apple)
+     * @param code Authorization code
+     * @param redirectUri Redirect URI
+     * @return OAuth 로그인 결과
+     */
+    @Transactional
+    public OAuthLoginResult oauthLogin(String provider, String code, String redirectUri) {
+        // Provider 파싱
+        OAuthProvider oAuthProvider;
+        try {
+            oAuthProvider = OAuthProvider.valueOf(provider.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(
+                    ErrorCode.OAUTH_PROVIDER_NOT_SUPPORTED,
+                    "지원하지 않는 OAuth 제공자입니다: " + provider
+            );
+        }
+
+        // OAuth2 클라이언트 가져오기
+        OAuth2Client oAuth2Client = oAuth2ClientFactory.getClient(oAuthProvider);
+
+        // Authorization code를 access token으로 교환
+        OAuth2Client.OAuth2TokenResponse tokenResponse = oAuth2Client.exchangeCodeForToken(
+                code,
+                redirectUri
+        );
+
+        // Access token으로 사용자 정보 조회
+        OAuth2Client.OAuth2UserInfo userInfo = oAuth2Client.getUserInfo(tokenResponse.accessToken());
+
+        // OAuth 로그인 처리 (신규 사용자 등록 또는 기존 사용자 로그인)
+        OAuth2UserService.LoginResult loginResult = oAuth2UserService.processOAuthLogin(
+                oAuthProvider,
+                userInfo.providerId(),
+                userInfo.email(),
+                userInfo.name(),
+                userInfo.profileImageUrl(),
+                tokenResponse.accessToken(),
+                tokenResponse.refreshToken(),
+                tokenResponse.expiresAt()
+        );
+
+        log.info("OAuth login successful: provider={}, email={}, isNewUser={}",
+                provider, userInfo.email(), loginResult.isNewUser());
+
+        return new OAuthLoginResult(
+                loginResult.accessToken(),
+                loginResult.refreshToken(),
+                loginResult.user(),
+                loginResult.isNewUser()
+        );
+    }
+
+    /**
+     * 토큰 갱신 / Refresh token
+     *
+     * @param refreshToken 리프레시 토큰
+     * @return 새로운 액세스 토큰 및 리프레시 토큰
+     */
+    @Transactional
+    public TokenRefreshResult refreshToken(String refreshToken) {
+        // 리프레시 토큰 유효성 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        // 토큰 유형 확인
+        if (!"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, "리프레시 토큰이 아닙니다.");
+        }
+
+        // 토큰 만료 확인
+        if (jwtTokenProvider.isExpired(refreshToken)) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        // 사용자 정보 조회
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        User user = userService.getUserById(userId);
+
+        // 새 토큰 발급
+        JwtTokenProvider.TokenPair tokenPair = jwtTokenProvider.refreshTokens(
+                refreshToken,
+                user.getEmail(),
+                user.getGrade().getCode()
+        );
+
+        log.info("Token refreshed for user: userId={}", userId);
+
+        return new TokenRefreshResult(
+                tokenPair.accessToken(),
+                tokenPair.refreshToken()
+        );
+    }
+
+    /**
+     * OAuth 로그인 결과 / OAuth login result
+     */
+    public record OAuthLoginResult(
+            String accessToken,
+            String refreshToken,
+            User user,
+            boolean isNewUser
+    ) {}
+
+    /**
+     * 토큰 갱신 결과 / Token refresh result
+     */
+    public record TokenRefreshResult(
+            String accessToken,
+            String refreshToken
     ) {}
 }

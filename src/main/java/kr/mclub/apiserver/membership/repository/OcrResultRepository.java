@@ -1,12 +1,13 @@
 package kr.mclub.apiserver.membership.repository;
 
-import kr.mclub.apiserver.membership.domain.OcrResult;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Optional;
+import kr.mclub.apiserver.membership.domain.OcrResult;
 
 /**
  * OCR 검증 결과 Repository / OCR Result Repository
@@ -25,7 +26,7 @@ public interface OcrResultRepository extends JpaRepository<OcrResult, Long> {
      */
     @Query("SELECT ocr FROM OcrResult ocr " +
            "JOIN ApplicationDocument ad ON ocr.documentId = ad.id " +
-           "WHERE ad.applicationId = :applicationId")
+           "WHERE ad.application.id = :applicationId")
     List<OcrResult> findByApplicationId(@Param("applicationId") Long applicationId);
 
     /**

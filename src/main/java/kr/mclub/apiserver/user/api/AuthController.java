@@ -1,17 +1,28 @@
 package kr.mclub.apiserver.user.api;
 
 import jakarta.validation.Valid;
-import kr.mclub.apiserver.shared.exception.BusinessException;
-import kr.mclub.apiserver.shared.exception.ErrorCode;
-import kr.mclub.apiserver.shared.security.CurrentUser;
-import kr.mclub.apiserver.shared.security.JwtTokenProvider;
-import kr.mclub.apiserver.shared.util.ApiResponse;
-import kr.mclub.apiserver.user.api.dto.*;
-import kr.mclub.apiserver.user.service.AuthService;
-import kr.mclub.apiserver.user.service.OAuth2UserService;
-import kr.mclub.apiserver.user.service.UserService;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+
+import kr.mclub.apiserver.shared.security.CurrentUser;
+import kr.mclub.apiserver.shared.util.ApiResponse;
+import kr.mclub.apiserver.user.api.dto.ChangePasswordRequest;
+import kr.mclub.apiserver.user.api.dto.OAuthLoginRequest;
+import kr.mclub.apiserver.user.api.dto.OAuthLoginResponse;
+import kr.mclub.apiserver.user.api.dto.SignInRequest;
+import kr.mclub.apiserver.user.api.dto.SignInResponse;
+import kr.mclub.apiserver.user.api.dto.SignUpRequest;
+import kr.mclub.apiserver.user.api.dto.SignUpResponse;
+import kr.mclub.apiserver.user.api.dto.TokenRefreshRequest;
+import kr.mclub.apiserver.user.api.dto.TokenRefreshResponse;
+import kr.mclub.apiserver.user.api.dto.UserProfileResponse;
+import kr.mclub.apiserver.user.service.AuthService;
 
 /**
  * 인증 API 컨트롤러
@@ -23,9 +34,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final OAuth2UserService oAuth2UserService;
-    private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * OAuth 로그인
@@ -38,10 +46,18 @@ public class AuthController {
             @PathVariable String provider,
             @Valid @RequestBody OAuthLoginRequest request) {
 
-        // TODO: OAuth 제공자별 토큰 교환 및 사용자 정보 조회 구현
-        // 현재는 클라이언트에서 이미 토큰 교환을 완료하고 사용자 정보를 전달받는 방식으로 구현
+        AuthService.OAuthLoginResult result = authService.oauthLogin(
+                provider,
+                request.code(),
+                request.redirectUri()
+        );
 
-        throw new UnsupportedOperationException("OAuth 로그인은 별도의 OAuth2 콜백 처리가 필요합니다.");
+        return ApiResponse.success(new OAuthLoginResponse(
+                result.accessToken(),
+                result.refreshToken(),
+                UserProfileResponse.from(result.user()),
+                result.isNewUser()
+        ));
     }
 
     /**
@@ -54,37 +70,11 @@ public class AuthController {
     public ApiResponse<TokenRefreshResponse> refreshToken(
             @Valid @RequestBody TokenRefreshRequest request) {
 
-        String refreshToken = request.refreshToken();
-
-        // 리프레시 토큰 유효성 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN);
-        }
-
-        // 토큰 유형 확인
-        if (!"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN, "리프레시 토큰이 아닙니다.");
-        }
-
-        // 토큰 만료 확인
-        if (jwtTokenProvider.isExpired(refreshToken)) {
-            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
-        }
-
-        // 사용자 정보 조회
-        Long userId = jwtTokenProvider.getUserId(refreshToken);
-        var user = userService.getUserById(userId);
-
-        // 새 토큰 발급
-        JwtTokenProvider.TokenPair tokenPair = jwtTokenProvider.refreshTokens(
-                refreshToken,
-                user.getEmail(),
-                user.getGrade().getCode()
-        );
+        AuthService.TokenRefreshResult result = authService.refreshToken(request.refreshToken());
 
         return ApiResponse.success(new TokenRefreshResponse(
-                tokenPair.accessToken(),
-                tokenPair.refreshToken()
+                result.accessToken(),
+                result.refreshToken()
         ));
     }
 

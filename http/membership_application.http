@@ -1,0 +1,205 @@
+### BMW M Club Korea API - Membership Application Tests
+### 정회원 신청 API 테스트
+
+### 환경 변수 설정
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# 테스트용 토큰 (실제 로그인 후 발급받은 토큰으로 교체 필요)
+@accessToken = eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZ3JhZGUiOiJBU1NPQ0lBVEUiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzY3MTQ4OTIyLCJleHAiOjE3NjcxNDk4MjJ9.BuqFKLrCmLEtoOItESqC9RxdnEuBwjz8ZkCp79Z49-omqLAGxu4R34n66vYeyruC
+
+### 1. 정회원 신청서 제출 (성공)
+POST {{baseUrl}}/api/v1/membership/applications
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "realName": "홍길동",
+  "phoneNumber": "010-1234-5678",
+  "carNumber": "12가3456",
+  "vinNumber": "WBSWD93508P123456",
+  "carModel": "BMW M3 Competition",
+  "ownershipType": "PERSONAL"
+}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "applicationNumber": "APP-20260106-00001",
+#     "status": "DOCUMENT_PENDING",
+#     "vehicleOwnershipType": "PERSONAL",
+#     "applicantName": "홍길동",
+#     "applicantPhone": "010-1234-5678",
+#     "carNumber": "12가3456",
+#     "vinNumber": "WBSWD93508P123456",
+#     "carModel": "BMW M3 Competition",
+#     "createdAt": "2026-01-06T17:30:00"
+#   },
+#   "message": "Success",
+#   "timestamp": "2026-01-06T17:30:00"
+# }
+
+###
+
+### 2. 정회원 신청서 제출 (실패 - 필수 필드 누락)
+POST {{baseUrl}}/api/v1/membership/applications
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "realName": "홍길동",
+  "phoneNumber": "010-1234-5678"
+}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "INVALID_INPUT",
+#     "message": "필수 입력값이 누락되었습니다."
+#   },
+#   "timestamp": "2026-01-06T17:30:00"
+# }
+
+###
+
+### 3. 내 신청서 조회 (성공)
+GET {{baseUrl}}/api/v1/membership/applications/me
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "userId": 1,
+#     "applicationNumber": "APP-20260106-00001",
+#     "status": "DOCUMENT_PENDING",
+#     "vehicleOwnershipType": "PERSONAL",
+#     "applicantName": "홍길동",
+#     "applicantPhone": "010-1234-5678",
+#     "carNumber": "12가3456",
+#     "vinNumber": "WBSWD93508P123456",
+#     "carModel": "BMW M3 Competition"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 4. 신청서 ID로 조회 (관리자)
+GET {{baseUrl}}/api/v1/membership/applications/1
+Authorization: Bearer {{accessToken}}
+
+###
+
+### 5. 상태별 신청서 목록 조회 (관리자)
+GET {{baseUrl}}/api/v1/membership/applications?status=DOCUMENT_PENDING
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "applicationNumber": "APP-20260106-00001",
+#       "status": "DOCUMENT_PENDING",
+#       "applicantName": "홍길동"
+#     }
+#   ],
+#   "message": "Success"
+# }
+
+###
+
+### 6. 신청서 승인 (관리자)
+POST {{baseUrl}}/api/v1/membership/applications/1/approve
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "status": "DOCUMENT_APPROVED",
+#     "reviewedBy": 1,
+#     "reviewedAt": "2026-01-06T17:35:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 7. 신청서 반려 (관리자)
+POST {{baseUrl}}/api/v1/membership/applications/1/reject?reason=서류%20불충분
+Authorization: Bearer {{accessToken}}
+
+### 예상 응답 (성공):
+# {
+#   "success": true,
+#   "data": {
+#     "id": 1,
+#     "status": "DOCUMENT_REJECTED",
+#     "rejectionReason": "서류 불충분",
+#     "reviewedBy": 1,
+#     "reviewedAt": "2026-01-06T17:35:00"
+#   },
+#   "message": "Success"
+# }
+
+###
+
+### 8. 신청서 제출 (실패 - 이미 대기중인 신청서 존재)
+POST {{baseUrl}}/api/v1/membership/applications
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "realName": "홍길동",
+  "phoneNumber": "010-1234-5678",
+  "carNumber": "12가3456",
+  "vinNumber": "WBSWD93508P123456",
+  "carModel": "BMW M3 Competition",
+  "ownershipType": "PERSONAL"
+}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "APPLICATION_ALREADY_EXISTS",
+#     "message": "이미 심사 대기중인 신청서가 있습니다."
+#   },
+#   "timestamp": "2026-01-06T17:30:00"
+# }
+
+###
+
+### 9. 인증 없이 신청서 제출 (실패 - 401 Unauthorized)
+POST {{baseUrl}}/api/v1/membership/applications
+Content-Type: {{contentType}}
+
+{
+  "realName": "홍길동",
+  "phoneNumber": "010-1234-5678",
+  "carNumber": "12가3456",
+  "vinNumber": "WBSWD93508P123456",
+  "carModel": "BMW M3 Competition",
+  "ownershipType": "PERSONAL"
+}
+
+### 예상 응답 (실패):
+# {
+#   "success": false,
+#   "error": {
+#     "code": "UNAUTHORIZED",
+#     "message": "인증이 필요합니다."
+#   },
+#   "timestamp": "2026-01-06T17:30:00"
+# }
+
+###

@@ -1,15 +1,28 @@
 package kr.mclub.apiserver.user.domain;
 
-import jakarta.persistence.*;
-import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import kr.mclub.apiserver.shared.domain.BaseTimeEntity;
 
 /**
  * 사용자 엔티티
@@ -84,6 +97,9 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @Column(name = "is_profile_public", nullable = false)
+    private boolean isProfilePublic = true;  // 프로필 공개 여부 (기본값: 공개)
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OAuthAccount> oAuthAccounts = new ArrayList<>();
@@ -267,5 +283,45 @@ public class User extends BaseTimeEntity {
      */
     public boolean hasPassword() {
         return this.password != null && !this.password.isEmpty();
+    }
+
+    /**
+     * 프로필 이미지 업데이트
+     * Update profile image
+     */
+    public void updateProfileImage(String imageUrl) {
+        this.profileImageUrl = imageUrl;
+    }
+
+    /**
+     * 실명 변경
+     * Change real name
+     */
+    public void updateRealName(String newRealName) {
+        this.realName = newRealName;
+    }
+
+    /**
+     * 전화번호 변경
+     * Change phone number
+     */
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    /**
+     * 이메일 변경
+     * Change email
+     */
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    /**
+     * 프로필 공개 설정 변경
+     * Change profile visibility
+     */
+    public void setProfilePublic(boolean isPublic) {
+        this.isProfilePublic = isPublic;
     }
 }

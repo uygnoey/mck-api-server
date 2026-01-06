@@ -1,10 +1,11 @@
 package kr.mclub.apiserver.membership.repository;
 
-import kr.mclub.apiserver.membership.domain.DirectorPart;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import kr.mclub.apiserver.membership.domain.DirectorPart;
 
 /**
  * 이사 파트 마스터 Repository / Director Part Master Repository
@@ -19,7 +20,7 @@ public interface DirectorPartRepository extends JpaRepository<DirectorPart, Long
     /**
      * 파트명으로 파트 조회 / Find part by part name
      */
-    Optional<DirectorPart> findByPartName(String partName);
+    Optional<DirectorPart> findByName(String name);
 
     /**
      * 활성 파트 목록 조회 (정렬순) / Find all active parts ordered by display order
@@ -34,10 +35,10 @@ public interface DirectorPartRepository extends JpaRepository<DirectorPart, Long
     /**
      * 파트명 존재 여부 확인 / Check if part name exists
      */
-    boolean existsByPartName(String partName);
+    boolean existsByName(String name);
 
     /**
      * 활성 파트 존재 여부 확인 / Check if active part exists
      */
-    boolean existsByPartNameAndIsActiveTrue(String partName);
+    boolean existsByNameAndIsActiveTrue(String name);
 }
